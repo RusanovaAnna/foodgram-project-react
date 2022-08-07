@@ -6,21 +6,28 @@ from recipes.models import FavouriteRecipe
 class RecipeFilter(filters.FilterSet):
     name = filters.CharFilter(
         field_name='name',
-        lookup_expr='icontains',
     )
     is_favorited = filters.NumberFilter(
-        method='get_is_favorited'
+        method='add_in_favourite'
     )
     is_in_shopping_cart = filters.NumberFilter(
-        method='get_is_in_shopping_cart'
+        method='add_to_shopping_cart'
     )
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
+
+    def get_is_favorited(self, queryset, value, name):
+        if value and not self.request.user.is_anonymous:
+            return queryset.filter(favorited__user=self.request.user)
+        return queryset
+
+    def get_is_in_shopping_cart(self, queryset, value, name):
+        if value and not self.request.user.is_anonymous:
+            return queryset.filter(user_shopping_cart__user=self.request.user)
+        return queryset
 
     class Meta:
         model = FavouriteRecipe
         fields = (
-            'author',
+            'user',
             'tags',
-            'is_favorited',
-            'is_in_shopping_cart'
         )

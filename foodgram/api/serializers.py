@@ -1,11 +1,11 @@
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 from rest_framework.validators import UniqueValidator
-from foodgram.recipes.models import FavouriteRecipe
+from recipes.models import FavouriteRecipe
 from users.models import User
+#from users.serializers import UserSerializer
 from recipes.models import Ingredient, Recipe, Tag
 
 
@@ -49,54 +49,16 @@ class GetConfirmationCode(serializers.ModelSerializer):
         model = User
 
 
-User = get_user_model()
-
-class UserSerializer(serializers.ModelSerializer):
-
-    is_subscribed = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'email',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'password',
-        )
-        extra_kwargs = {'password': {'write_only': True}}
-        read_only_fields = 'is_subscribed',
-
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous or (user == obj):
-            return False
-        return user.subscribe.filter(id=obj.id).exists()
-
-    def create(self, validated_data):
-        user = User(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-            password=validated_data['password'],
-        )
-        user.save()
-        return user
-
-
-class TagSerializer(ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
         fields = '__all__'
         read_only_fields = '__all__',
 
-class RecipeSerializer(ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
     #tags = TagSerializer(many=True, read_only=True)
-    author = UserSerializer(read_only=True)
+    #author = UserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -110,19 +72,8 @@ class RecipeSerializer(ModelSerializer):
             'is_shopping_cart',
         )
 
-class RecipeFollowSerializer(serializers.ModelSerializer):
 
-    name = serializers.ReadOnlyField()
-    image = serializers.ReadOnlyField()
-    cooking_time = serializers.ReadOnlyField()
-    class Meta:
-        model = Recipe
-        fields = (
-            'id', 'name', 'image', 'cooking_time',
-        )
-
-
-class FavoriteRecipeSerializer(serializers.UserDetailSerializer):
+class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
     user = serializers.ReadOnlyField(source='user.id')
     recipe = serializers.ReadOnlyField(source='recipe.id')
@@ -145,10 +96,3 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = '__all__'
         read_only_fields = '__all__',
-
-
-class MeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username', 'email',
-                  'first_name', 'last_name')

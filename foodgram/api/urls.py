@@ -1,14 +1,9 @@
-import os
-
 from django.urls import include, path
-from djoser.views import TokenDestroyView
 from dotenv import load_dotenv
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
-from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
 
 from . import views
+from users.views import UserViewSet
 
 load_dotenv()
 
@@ -17,7 +12,7 @@ app_name = 'api'
 
 router = DefaultRouter()
 
-router.register("users", views.MyUserViewSet, basename="users")
+router.register("users", UserViewSet, basename="users")
 router.register('tags', views.TagViewSet, basename='tags')
 router.register('recipes', views.RecipeViewSet,
                 basename='recipes')

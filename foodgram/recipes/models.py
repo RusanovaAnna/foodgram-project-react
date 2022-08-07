@@ -73,11 +73,12 @@ class UnitOfMeasurement(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         max_length=200,
-        verbose_name='name')
+        verbose_name='name'
+        )
     measurement_unit = models.CharField(
         UnitOfMeasurement,
         max_length=200,
-        verbose_name='unit of measurement')
+        )
 
     class Meta:
         ordering = ('name',)
@@ -243,3 +244,6 @@ class Follow(models.Model):
                 name='unique_author_user_following'
             )
         ]
+        
+    def __str__(self):
+        return f'{self.username} follow for {self.following}'
