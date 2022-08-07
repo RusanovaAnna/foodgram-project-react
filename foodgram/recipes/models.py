@@ -93,7 +93,6 @@ class Recipe(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='recipes',
-        on_delete=models.SET_NULL,
         null=True,
         verbose_name='author',
         unique=True,
@@ -177,8 +176,8 @@ class FavouriteRecipe(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_favorite_recipe',
+                fields=['recipe', 'user'],
+                name='unique_favourite_recipe',
             )
         ]
         verbose_name = _('Favorites')
@@ -205,7 +204,7 @@ class IngredientList(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
-        verbose_name=_('ingredient amount')
+        verbose_name=_('amount')
     )
 
     class Meta:
@@ -221,3 +220,26 @@ class IngredientList(models.Model):
 
     def __str__(self):
         return f'{self.recipe.name} - {self.ingredient.name}'
+
+
+class Follow(models.Model):
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='author',
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='user',
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_author_user_following'
+            )
+        ]
