@@ -4,13 +4,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from recipes.models import Follow
-from users.models import User, UserProfile
+from users.models import User
 
 from api.pagination import UserPagination
-from .serializers import MeSerializer, UserSerializer
-from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
-from .permissions import IsOwnerProfileOrReadOnly
-from .serializers import UserProfileSerializer
+from .serializers import *
+#from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
