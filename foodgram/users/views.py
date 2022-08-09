@@ -4,11 +4,13 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from recipes.models import Follow
-from users.models import User
+from users.models import User, UserProfile
 
 from api.pagination import UserPagination
 from .serializers import MeSerializer, UserSerializer
-
+from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
+from .permissions import IsOwnerProfileOrReadOnly
+from .serializers import UserProfileSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -77,3 +79,5 @@ class UserViewSet(viewsets.ModelViewSet):
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+

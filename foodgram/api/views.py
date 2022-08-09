@@ -1,3 +1,4 @@
+from contextvars import Token
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.http import HttpResponse
@@ -20,36 +21,6 @@ from .permissions import (IsAuthorOrReadOnly,)
 from .serializers import (FavoriteRecipeSerializer, GetConfirmationCode,
                           GetTokenSerializer, RecipeSerializer,
                           TagSerializer, IngredientSerializer)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny],)
-def get_confirmation_code(request):
-    serializer = GetConfirmationCode(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-    username = serializer.validated_data.get('username')
-    user = get_object_or_404(User, username=username)
-    confirmation_code = default_token_generator.make_token(user)
-    send_mail(
-        'Title: Please, use it code for generate token',
-        f'{confirmation_code}',
-        EMAIL_ADMIN,
-        [serializer.validated_data['email']],
-        fail_silently=False,
-    )
-    return Response(serializer.validated_data, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny],)
-def get_token(request):
-    serializer = GetTokenSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = get_object_or_404(
-        User, username=serializer.validated_data.get('username'))
-    token = AccessToken.for_user(user)
-    return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -133,29 +104,21 @@ class IngredientsViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=['get']
     )
-    def get_shopping_cart_list(request):
-        user = request.user
-        list_filter = IngredientList.objects.filter(
-            user_id=user.id).values_list("recipe", flat=True)
-        ingredients_filter = Ingredient.objects.filter(
-            recipe_id__in=list_filter).order_by('ingredient')
-        ingredients = {}
-        for ingredient in ingredients_filter:
-            if ingredient.ingredient in ingredients.keys():
-                ingredients[ingredient.ingredient] += ingredient.amount
-            else:
-                ingredients[ingredient.ingredient] = ingredient.amount
 
-        shopping_list = []
-        for n, m in ingredients.items():
-            shopping_list.append(f'{n.title} - {m} {n.dimension} \n')
-        shopping_list.append('\n\n\n\n')
-        shopping_list.append('foodgram')
+    def download_shopping_cart(self, request):
+        ingredients = (
+            IngredientList.objects
+            .select_related('ingredient', 'recipe')
+            .prefetch_related('purchases')
+            .filter(recipe__purchases__user=request.user)
+            .values_list('ingredient__name', 'ingredient__measurement_unit')
+            .annotate(amount=sum('amount'))
+        )
 
-        response = HttpResponse(shopping_list, 'Content-Type: text/plain')
-        response['Content-Disposition'] = 'attachment; filename="wishlist.txt"'
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = ('attachment;'
+                                           'filename="Your_shopping_list.csv"')
         return response
-
 
 #class APIChange_Password(APIView):
 #    def post(self, request, *args, **kwargs):

@@ -96,12 +96,11 @@ class Recipe(models.Model):
         related_name='recipes',
         null=True,
         verbose_name='author',
-        unique=True,
     )
     ingredients = models.ManyToManyField(
         Ingredient,
         related_name='recipes',
-        through='IngredientAmount',
+        through='IngredientList',
         verbose_name='ingredients',
     )
     tags = models.ManyToManyField(
@@ -135,7 +134,12 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
-        ordering = ['date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author'],
+                name='unique_recipe',
+            )
+        ]
 
     def __str__(self):
         return self.name
@@ -197,7 +201,7 @@ class IngredientList(models.Model):
         verbose_name=_('recipe')
     )
     ingredient = models.ForeignKey(
-        'ingredients.Ingredient',
+        'ingredient',
         related_name='ingredient_list',
         on_delete=models.SET_NULL,
         null=True,
@@ -244,6 +248,6 @@ class Follow(models.Model):
                 name='unique_author_user_following'
             )
         ]
-        
+
     def __str__(self):
         return f'{self.username} follow for {self.following}'

@@ -1,4 +1,4 @@
-from django.contrib.admin import ModelAdmin, display, register, site
+from django.contrib.admin import ModelAdmin, display, site
 from django.utils.translation import gettext_lazy as _
 
 from .models import FavouriteRecipe, IngredientList, Recipe, Tag
@@ -6,9 +6,10 @@ from .models import FavouriteRecipe, IngredientList, Recipe, Tag
 
 site.register(IngredientList)
 site.register(FavouriteRecipe)
+site.register(Recipe)
+site.register(Tag)
 
 
-@register(Tag)
 class TagAdmin(ModelAdmin):
     list_display = ('name', 'color', 'slug')
     search_fields = ('name', 'slug')
@@ -16,18 +17,11 @@ class TagAdmin(ModelAdmin):
     ordering = ('name',)
 
 
-@register(Recipe)
 class RecipeAdmin(ModelAdmin):
     list_display = (
-        'author',
-        'ingredients',
-        'tags',
-        'image',
-        'name',
-        'text',
-        'cooking_time',
-     #   'created_date',
-      #  'get_favorites',
+        'author', 'ingredients',
+        'tags','image','name',
+        'text','cooking_time',
     )
     filter_horizontal = ('tags',)
     search_fields = ('author',)
@@ -38,7 +32,7 @@ class RecipeAdmin(ModelAdmin):
         'name',
         'cooking_time',
     )
-    ordering = ('created_date', 'author')
+    ordering = ('author')
 
     @display(description='tags')
     def get_tags(self, obj):
@@ -53,3 +47,4 @@ class RecipeAdmin(ModelAdmin):
         if get_fav:
             return get_fav
         return None
+

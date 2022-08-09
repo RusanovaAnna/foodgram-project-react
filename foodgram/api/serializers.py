@@ -9,44 +9,38 @@ from users.models import User
 from recipes.models import Ingredient, Recipe, Tag
 
 
-class GetTokenSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True, max_length=100)
-    confirmation_code = serializers.CharField(required=True, max_length=100)
-
-    def validate(self, data):
-        username = data.get('username')
-        user = get_object_or_404(User, username=username)
-        confirmation_code = username = data.get('confirmation_code')
-
-        if not default_token_generator.check_token(user, confirmation_code):
-            raise serializers.ValidationError('error code')
-        return data
-
-    class Meta:
-        fields = ('username', 'confirmation_code')
-        model = User
-
-
-class GetConfirmationCode(serializers.ModelSerializer):
-    username = serializers.CharField(
-        validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ]
-    )
+class CustomAuthTokenSerializer(serializers.Serializer):
     email = serializers.EmailField(
-        validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ]
+        label="Email",
+        write_only=True
+    )
+    password = serializers.CharField(
+        label="Password",
+        style={'input_type': 'password'},
+        trim_whitespace=False,
+        write_only=True
+    )
+    token = serializers.CharField(
+        label="Token",
+        read_only=True
     )
 
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError('Choose a different name')
-        return value
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
 
-    class Meta:
-        fields = ('username', 'email')
-        model = User
+        if email and password:
+            user = authenticate(request=self.context.get('request'),
+                                email=email, password=password)
+            if not user:
+                msg = 'Unable to log in with provided credentials.'
+                raise serializers.ValidationError(msg, code='authorization')
+        else:
+            msg = 'Must include "email" and "password".'
+            raise serializers.ValidationError(msg, code='authorization')
+
+        attrs['user'] = user
+        return attrs
 
 
 class TagSerializer(serializers.ModelSerializer):
