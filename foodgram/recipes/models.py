@@ -1,3 +1,4 @@
+from colorfield.fields import ColorField
 from django.core.validators import MinValueValidator
 from django.db import models
 
@@ -19,15 +20,12 @@ class Tag(models.Model):
         unique=True,
         verbose_name='name',
     )
-    color = models.CharField(
-        max_length=32,
-        default='#E26C2D',
+    color = ColorField(
         unique=True,
         verbose_name='color',
     )
     slug = models.SlugField(
         max_length=255,
-        editable=False,
         verbose_name='slug',
         unique=True,
     )
@@ -35,7 +33,6 @@ class Tag(models.Model):
     class Meta:
         verbose_name = _('Tag')
         verbose_name_plural = _('Tags')
-        ordering = ['id']
 
     def __str__(self):
         return self.name
@@ -43,11 +40,16 @@ class Tag(models.Model):
 
 class UnitOfMeasurement(models.Model):
     class Metrics(models.TextChoices):
-        mass = _('mass'), _('mass')
-        volume = _('volume'), _('volume')
-        quantity = _('quantity'), _('quantity')
-        percent = _('percent'), _('percent')
-        miscellaneous = _('miscellaneous'), _('miscellaneous')
+        tbsp = _('tbsp'), _('ст.ложка')
+        tsp = _('tsp'), _('ч.л.')
+        quantity = _('quantity'), _('штука')
+        percent = _('percent'), _('процент')
+        cup = _('cup'), _('чашка')
+        ounce = _('ounce'), _('унция')
+        gram = _('gram'), _('грамм')
+        milliliter = _('milliliter'), _('мл')
+
+        
 
     name = models.CharField(
         max_length=255,
@@ -73,7 +75,7 @@ class UnitOfMeasurement(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         max_length=200,
-        verbose_name='name'
+        verbose_name='name',
         )
     measurement_unit = models.CharField(
         UnitOfMeasurement,
@@ -163,11 +165,11 @@ class FavouriteRecipe(models.Model):
     )
     is_favorited = models.BooleanField(
         default=False,
-        verbose_name='is favorited'
+        verbose_name='is favorited',
     )
     is_in_shopping_cart = models.BooleanField(
         default=False,
-        verbose_name='is in shopping cart'
+        verbose_name='is in shopping cart',
     )
     #added_to_favorites = models.DateTimeField(
     #    auto_now_add=True,
@@ -198,18 +200,18 @@ class IngredientList(models.Model):
         'Recipe',
         related_name='ingredient_list',
         on_delete=models.CASCADE,
-        verbose_name=_('recipe')
+        verbose_name='recipe',
     )
     ingredient = models.ForeignKey(
-        'ingredient',
+        Ingredient,
         related_name='ingredient_list',
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name=_('ingredient')
+        verbose_name='ingredient',
     )
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
-        verbose_name=_('amount')
+        verbose_name='amount',
     )
 
     class Meta:
@@ -245,7 +247,7 @@ class Follow(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'author'],
-                name='unique_author_user_following'
+                name='unique_author_user_following',
             )
         ]
 

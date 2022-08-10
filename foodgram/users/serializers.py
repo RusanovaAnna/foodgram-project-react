@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import User, UserProfile
+from .models import User
 from recipes.models import Follow
 
 User = get_user_model()
@@ -48,4 +48,4 @@ class MeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email',
-                  'first_name', 'last_name')
+                  'first_name', 'last_name',)

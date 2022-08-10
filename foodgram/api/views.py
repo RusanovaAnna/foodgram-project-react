@@ -1,9 +1,9 @@
-from contextvars import Token
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from djoser.views import TokenCreateView
+from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -18,14 +18,14 @@ from foodgram.settings import EMAIL_ADMIN
 from .filtres import RecipeFilter
 #from .mixins import ListCreateDestroyViewSet
 from .permissions import (IsAuthorOrReadOnly,)
-from .serializers import (FavoriteRecipeSerializer, GetConfirmationCode,
-                          GetTokenSerializer, RecipeSerializer,
+from .serializers import (FavoriteRecipeSerializer, RecipeSerializer,
                           TagSerializer, IngredientSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = (TagSerializer,)
+    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -46,7 +46,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         serializer = serializer(
             data={'user': request.user.id, 'recipe': pk},
-            context={'request': request})
+            context={'request': request},)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -55,8 +55,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get', 'delete'],
-        permission_classes=[IsAuthenticated],
-        serializer_class=[FavoriteRecipeSerializer],
+        permission_classes=IsAuthenticated,
+        serializer_class=FavoriteRecipeSerializer,
+        url_name='favorite',
+        url_path='favorite',
     )
     def favorite(self, request, **kwargs):
         user = request.user
@@ -77,7 +79,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get', 'delete'],
-        permission_classes=[IsAuthenticated]
+        permission_classes=IsAuthenticated,
+        url_path='shopping_cart',
+        url_name='shopping_cart',
     )
     def shopping_cart(self, request, **kwargs):
         user = request.user
@@ -95,16 +99,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
-class IngredientsViewSet(viewsets.ModelViewSet):
-    queryset = Ingredient.objects.all().order_by('name')
-    serializer_class = (IngredientSerializer,)
-
     @action(
         detail=False,
-        methods=['get']
+        methods=['get'],
+        url_name='download_shopping_cart',
+        url_path='download_shopping_cart',
     )
-
     def download_shopping_cart(self, request):
         ingredients = (
             IngredientList.objects
@@ -119,6 +119,15 @@ class IngredientsViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = ('attachment;'
                                            'filename="Your_shopping_list.csv"')
         return response
+
+
+class IngredientsViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all().order_by('name')
+    serializer_class = (IngredientSerializer,)
+    permission_classes=(IsAuthenticated,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', )
+    pagination_class = None
 
 #class APIChange_Password(APIView):
 #    def post(self, request, *args, **kwargs):
@@ -137,4 +146,9 @@ class IngredientsViewSet(viewsets.ModelViewSet):
 #        return Response(serializer.errors, 
 #                        status=status.HTTP_400_BAD_REQUEST)
 
+class CreateTokenView(TokenCreateView):
 
+    def _action(self, serializer):
+        response = super()._action(serializer)
+        response.status_code = status.HTTP_201_CREATED
+        return response

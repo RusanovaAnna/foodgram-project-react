@@ -1,18 +1,19 @@
 from django.contrib.admin import ModelAdmin, display, site
 from django.utils.translation import gettext_lazy as _
 
-from .models import FavouriteRecipe, IngredientList, Recipe, Tag
+from .models import *
 
 
 site.register(IngredientList)
 site.register(FavouriteRecipe)
 site.register(Recipe)
 site.register(Tag)
+site.register(Ingredient)
 
 
 class TagAdmin(ModelAdmin):
-    list_display = ('name', 'color', 'slug')
-    search_fields = ('name', 'slug')
+    list_display = ('name', 'color', 'slug',)
+    search_fields = ('name', 'slug',)
     list_filter = ('name', 'color',)
     ordering = ('name',)
 

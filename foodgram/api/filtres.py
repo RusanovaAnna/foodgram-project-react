@@ -8,12 +8,12 @@ class RecipeFilter(filters.FilterSet):
         field_name='name',
     )
     is_favorited = filters.NumberFilter(
-        method='add_in_favourite'
+        method='favourite',
     )
     is_in_shopping_cart = filters.NumberFilter(
-        method='add_to_shopping_cart'
+        method='shopping_cart',
     )
-    tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
+    tags = filters.AllValuesMultipleFilter(field_name='tags__slug',)
 
     def get_is_favorited(self, queryset, value, name):
         if value and not self.request.user.is_anonymous:

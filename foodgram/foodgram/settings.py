@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+#from datetime import timedelta
 #from pathlib import Path
 
 from dotenv import load_dotenv
@@ -11,12 +11,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-sh7=a^i3e^e1bi#n=soaee-^zr1)6jb1i%b4vw#zg+s5_vr@x@')
 
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'localhost']
-
-
-# Application definition
+ALLOWED_HOSTS = ['localhost']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -30,7 +27,6 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_simplejwt',
     'colorfield',
     'drf_yasg',
     'corsheaders',
@@ -71,8 +67,8 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', 'postgres'),
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', 'db.sqlite3'),
     }
 }
 
@@ -112,9 +108,10 @@ AUTH_USER_MODEL = 'users.User'
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+       'rest_framework.authentication.TokenAuthentication',
+       'rest_framework.authentication.SessionAuthentication',
+   ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
@@ -123,15 +120,13 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.'
                                 'PageNumberPagination',
-    "PAGE_SIZE": 10,
+    "PAGE_SIZE": 6,
 }
 
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=20),
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
-
+#SIMPLE_JWT = {
+#    'ACCESS_TOKEN_LIFETIME': timedelta(days=20),
+#    'AUTH_HEADER_TYPES': ('Bearer',),
+#}
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
@@ -146,7 +141,5 @@ DJOSER = {
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 EMAIL_ADMIN = 'artem@gmail.com'
-
-
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -11,19 +11,19 @@ class User(AbstractUser):
         unique=True,
         blank=False,
         null=False,
-        verbose_name='email'
+        verbose_name='email',
     )
     username = models.CharField(
         max_length=150,
         blank=False,
         null=False,
-        verbose_name='username'
+        verbose_name='username',
     )
     first_name = models.CharField(
         max_length=150,
         blank=False,
         null=False,
-        verbose_name='first name'
+        verbose_name='first name',
     )
     last_name = models.CharField(
         max_length=150,
