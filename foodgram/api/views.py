@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-from django.template.loader import get_template
+
 from .filtres import *
 from .permissions import IsAuthorOrReadOnly
 from .serializers import *

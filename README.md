@@ -1,5 +1,4 @@
 # Проект Foodgram
-![example workflow]
 
 Дипломный проект foodgram-project-react
 

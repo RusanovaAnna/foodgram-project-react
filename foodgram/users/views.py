@@ -1,19 +1,14 @@
 from api.pagination import UserPagination
-from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
-from drf_yasg.utils import swagger_auto_schema
 from recipes.models import Follow
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-#from rest_framework.views import APIView
 
 from users.models import User
 
 from .serializers import *
-
-#from rest_framework.generics import (ListCreateAPIView,RetrieveUpdateDestroyAPIView,)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -26,16 +21,6 @@ class UserViewSet(viewsets.ModelViewSet):
             methods=['get', 'patch', ],
             permission_classes=[IsAuthenticated,],
             url_path='me',)
-    #def me(self, request):
-     #   user = get_object_or_404(User, username=request.user)
-     #   if request.method == 'GET':
-     #       serializer = UserSerializer(user)
-     #       return Response(serializer.data, status=status.HTTP_200_OK)
-     #   if request.method == 'PATCH':
-     #       serializer = MeSerializer(user, data=request.data, partial=True)
-    #        serializer.is_valid(raise_exception=True)
-   #         serializer.save()
-  #      return Response(serializer.data, status=status.HTTP_200_OK)
     def me(self, request, pk=None):
         serializer = self.get_serializer(self.request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)

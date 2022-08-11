@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.contrib.auth.tokens import default_token_generator
 from drf_extra_fields.fields import HybridImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
@@ -58,26 +57,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe.tags.add(*tags)
         self.add_ingredients(recipe, ingredients)
         return recipe
-    #def create(self, validated_data):
-    #    if 'tags' in validated_data:
-    #        tags = validated_data.pop('tags')
-    #    ingredients_data = validated_data.pop('related_ingredients')
-    #    recipe = super().create(validated_data)
-    #    recipe.tags.add(*tags)
-    #    self.parse_ingredients(recipe, ingredients_data)
-    #    return recipe
     
-    #def validate(self, data):
-    #    tags = []
-    #    for tag in data['tags']:
-    #        if tag not in tags:
-    #            tags.append(tag)
-    #        else:
-   #             raise serializers.ValidationError(
-    #                ''
-     #           )
-     #   return data
-
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -99,20 +79,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         return getattr(obj, 'is_in_shopping_cart', False)
-    #def bool_response(self, request_obj, main_obj):
-    #    request = self.context.get('request')
-    #    if request is None or request.user.is_anonymous:
-    #        return False
-    #    return main_obj.objects.filter(
-    #        user=request.user,
-    #        recipe=request_obj.id
-    #    ).exists()
-    #
-    #def get_is_favorited(self, obj):
-    #    return self.bool_response(obj, FavouriteRecipe)
-    
-    #def get_is_in_shopping_cart(self, obj):
-    #    return self.bool_response(obj, IngredientList)
+
 
     
 class FavoriteRecipeSerializer(serializers.ModelSerializer):

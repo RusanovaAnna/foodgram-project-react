@@ -169,14 +169,6 @@ class FavoriteRecipe(models.Model):
         default=False,
         verbose_name='is in shopping cart',
     )
-    #added_to_favorites = models.DateTimeField(
-    #    auto_now_add=True,
-    #    verbose_name='date - added to favorites'
-    #)
-    #added_to_shopping_cart = models.DateTimeField(
-    #    auto_now_add=True,
-    #    verbose_name='date - added to shopping cart'
-    #)
 
     class Meta:
         constraints = [
@@ -187,7 +179,6 @@ class FavoriteRecipe(models.Model):
         ]
         verbose_name = _('Favorites')
         verbose_name_plural = _('Favorites')
-        #ordering = ['-added_to_favorites', '-added_to_shopping_cart']
 
     def __str__(self):
         return f'{self.user.username} - {self.recipe.name}'

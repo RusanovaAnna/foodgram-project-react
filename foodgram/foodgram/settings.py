@@ -1,12 +1,9 @@
 import os
-#from datetime import timedelta
-#from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-#BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-sh7=a^i3e^e1bi#n=soaee-^zr1)6jb1i%b4vw#zg+s5_vr@x@')
@@ -124,10 +121,6 @@ REST_FRAMEWORK = {
                                 'PageNumberPagination',
     "PAGE_SIZE": 6,
 }
-#SIMPLE_JWT = {
-#    'ACCESS_TOKEN_LIFETIME': timedelta(days=20),
-#    'AUTH_HEADER_TYPES': ('Bearer',),
-#}
 
 DJOSER = {
     'LOGIN_FIELD': 'email',

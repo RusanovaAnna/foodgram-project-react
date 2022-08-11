@@ -22,24 +22,7 @@ router_v1.register('ingredients', IngredientsViewSet,
 
 urlpatterns = [
     path('', include(router_v1.urls)),
-    #path("", include("djoser.urls")),
     path("auth/", include("djoser.urls.authtoken")),
-    #path('', include('users.urls')),
-    #path('auth/token/login/', views.LoginViewSet, name='login'),
-    #path('signup', views.get_confirmation_code, name='get_conf_code'),
-#    path('', include(router.urls)),
     path('auth/token/login/', CreateTokenView.as_view(), name='login'),
     path('auth/token/logout/', TokenDestroyView.as_view(), name='logout'),
 ]
-
-#auth_urlpatterns = [
-#    path('login/', views.CustomAuthToken.as_view()),
-#    path('logout/', views.DestroyTokenAPIView.as_view()),
-#]
-
-
-#urlpatterns = [
-#    path('auth/token/', include(auth_urlpatterns)),
-#    path('users/', include(router.urls))
-#]
-
