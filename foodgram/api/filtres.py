@@ -1,11 +1,17 @@
 from turtle import color
 from django_filters import rest_framework as filters
-from recipes.models import FavouriteRecipe
+from recipes.models import FavouriteRecipe, Recipe
 
 
-class RecipeFilter(filters.FilterSet):
+class IngredientFilter(filters.FilterSet):
     name = filters.CharFilter(
-        field_name='name',
+        field_name='name', lookup_expr='starts_with'
+    )
+
+
+class RecipeFauvariteFilter(filters.FilterSet):
+    user = filters.CharFilter(
+        field_name='user',
     )
     is_favorited = filters.NumberFilter(
         method='favourite',
@@ -13,7 +19,6 @@ class RecipeFilter(filters.FilterSet):
     is_in_shopping_cart = filters.NumberFilter(
         method='shopping_cart',
     )
-    tags = filters.AllValuesMultipleFilter(field_name='tags__slug',)
 
     def get_is_favorited(self, queryset, value, name):
         if value and not self.request.user.is_anonymous:
@@ -29,5 +34,19 @@ class RecipeFilter(filters.FilterSet):
         model = FavouriteRecipe
         fields = (
             'user',
+        )
+
+
+class RecipeFilter(filters.FilterSet):
+    name = filters.CharFilter(
+        field_name='name',
+    )
+    tags = filters.AllValuesMultipleFilter(field_name='tags__slug',)
+
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'name',
             'tags',
         )

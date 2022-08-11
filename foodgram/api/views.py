@@ -9,13 +9,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticate
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from recipes.models import Tag, Recipe, FavouriteRecipe, Ingredient, IngredientList
+from recipes.models import Tag, Recipe, Ingredient, IngredientList, FavouriteRecipe
 from users.models import User
 from users.serializers import UserSerializer
 
 from foodgram.settings import EMAIL_ADMIN
 
-from .filtres import RecipeFilter
+from .filtres import *
 #from .mixins import ListCreateDestroyViewSet
 from .permissions import (IsAuthorOrReadOnly,)
 from .serializers import (FavoriteRecipeSerializer, RecipeSerializer,
@@ -24,15 +24,17 @@ from .serializers import (FavoriteRecipeSerializer, RecipeSerializer,
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
-    serializer_class = (TagSerializer,)
+    serializer_class = TagSerializer
     pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
-    filter_backends = (RecipeFilter,)
+    queryset = Recipe.objects.select_related('author').prefetch_related(
+        'ingredients'
+    ).all()
+    filterset_class = RecipeFilter
     serializer_class = (RecipeSerializer,)
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly,)
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly,]
 
     @staticmethod
     def add_or_delete(request, model, serializer, pk):
@@ -57,22 +59,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=['get', 'delete'],
         permission_classes=IsAuthenticated,
         serializer_class=FavoriteRecipeSerializer,
+        filterset_class=RecipeFauvariteFilter,
         url_name='favorite',
-        url_path='favorite',
+        url_path=r'(?P<id>[\d]+)/favorite',
     )
     def favorite(self, request, **kwargs):
         user = request.user
         recipes = get_object_or_404(FavouriteRecipe, id=kwargs['id'])
         fav = User.objects.filter(
             id=user.id,
-            recipes=recipes
+            favourite_recipe=recipes
         ).exists()
         if request.method == 'GET' and not fav:
-            recipes.is_favorited.add(user)
+            recipes.favorite.add(user)
             serializer = UserSerializer(recipes)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE' and fav:
-            recipes.is_favorited.remove(user)
+            recipes.favorite.remove(user)
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
     
@@ -87,16 +90,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         recipes = get_object_or_404(FavouriteRecipe, id=kwargs['id'])
         add = User.objects.filter(
+            recipes=recipes,
             id=user.id,
-            recipes=recipes
         ).exists()
+        if request.method == 'DELETE' and add:
+            user.cart.recipes.remove(recipes)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         if request.method == 'GET' and not add:
             user.cart.recipes.add(recipes)
             serializer = UserSerializer(recipes)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE' and add:
-            user.cart.recipes.remove(recipes)
-            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
@@ -121,13 +124,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
 
-class IngredientsViewSet(viewsets.ModelViewSet):
-    queryset = Ingredient.objects.all().order_by('name')
-    serializer_class = (IngredientSerializer,)
-    permission_classes=(IsAuthenticated,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name', )
+
+class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Ingredient.objects.all()
+    filterset_class = IngredientFilter
+    serializer_class = IngredientSerializer
     pagination_class = None
+    
+
 
 #class APIChange_Password(APIView):
 #    def post(self, request, *args, **kwargs):

@@ -2,9 +2,8 @@ from django.contrib.auth.tokens import default_token_generator
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from recipes.models import FavouriteRecipe
 #from users.serializers import UserSerializer
-from recipes.models import Ingredient, Recipe, Tag
+from recipes.models import Ingredient, Recipe, Tag, FavouriteRecipe
 
 
 class TagSerializer(serializers.ModelSerializer):

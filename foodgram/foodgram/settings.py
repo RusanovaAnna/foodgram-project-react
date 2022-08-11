@@ -13,7 +13,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-sh7=a^i3e^e1bi#n=soaee-^zr
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -66,12 +66,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.getenv('DB_NAME', 'db.sqlite3'),
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        'HOST': os.getenv('DB_HOST', default='localhost')
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -89,11 +89,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
+
+USE_L10N = True
 
 USE_TZ = True
 
@@ -122,7 +124,6 @@ REST_FRAMEWORK = {
                                 'PageNumberPagination',
     "PAGE_SIZE": 6,
 }
-
 #SIMPLE_JWT = {
 #    'ACCESS_TOKEN_LIFETIME': timedelta(days=20),
 #    'AUTH_HEADER_TYPES': ('Bearer',),
@@ -136,7 +137,9 @@ DJOSER = {
         'user': ['rest_framework.permissions.IsAuthenticated'],
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
+    "HIDE_USERS": False
 }
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')

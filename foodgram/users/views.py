@@ -18,11 +18,11 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'users'
-    pagination_class = (UserPagination,)
+    pagination_class = UserPagination
 
     @action(detail=False,
             methods=['get', 'patch', ],
-            permission_classes=(IsAuthenticated,),
+            permission_classes=[IsAuthenticated,],
             url_path='me',)
     def me(self, request):
         user = get_object_or_404(User, username=request.user.username)
@@ -38,7 +38,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get'],
         detail=False,
-        permission_classes=IsAuthenticated,
+        permission_classes=[IsAuthenticated],
         url_path='subscription',
         url_name='subscription',
     )
@@ -56,24 +56,23 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get', 'delete'],
-        permission_classes=IsAuthenticated,
-        url_path='subscribe',
+        permission_classes=[IsAuthenticated],
+        url_path=r'(?P<id>[\d]+)/subscribe',
         url_name='subscribe',
+        pagination_class=None,
     )
-    def subscribe(self, request, *args, **kwargs):
+    def subscribe(self, request, **kwargs):
         user = request.user
         author = get_object_or_404(User, id=kwargs['id'])
         subscription = Follow.objects.filter(
-            subscriber=user,
             author=author,
+            user=user,
         )
-        if (
-            request.method == 'GET'
+        if (request.method == 'GET'
             and user != author
-            and not subscription.exists()
-        ):
+            and not subscription.exists()):
             Follow.objects.create(
-                subscriber=user,
+                user=user,
                 author=author,
             )
             serializer = UserSerializer(
@@ -85,6 +84,8 @@ class UserViewSet(viewsets.ModelViewSet):
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+
 
 #    class APIChange_Password(APIView):
 #    def post(self, request, *args, **kwargs):

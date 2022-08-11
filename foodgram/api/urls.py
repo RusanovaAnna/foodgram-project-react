@@ -23,7 +23,7 @@ router_v1.register('ingredients', IngredientsViewSet,
 urlpatterns = [
     path('', include(router_v1.urls)),
     #path("", include("djoser.urls")),
-    #path("auth/", include("djoser.urls.authtoken")),
+    path("auth/", include("djoser.urls.authtoken")),
     #path('', include('users.urls')),
     #path('auth/token/login/', views.LoginViewSet, name='login'),
     #path('signup', views.get_confirmation_code, name='get_conf_code'),

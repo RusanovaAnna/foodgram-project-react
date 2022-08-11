@@ -159,7 +159,7 @@ class FavouriteRecipe(models.Model):
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name='in_favourites',
+        related_name='favourite',
         on_delete=models.CASCADE,
         verbose_name='recipe',
     )
@@ -193,6 +193,7 @@ class FavouriteRecipe(models.Model):
 
     def __str__(self):
         return f'{self.user.username} - {self.recipe.name}'
+
 
 
 class IngredientList(models.Model):

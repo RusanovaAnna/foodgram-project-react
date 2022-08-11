@@ -10,13 +10,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
-    def get_is_subscribed(self, following):
+    def get_is_subscribed(self, author):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
         return Follow.objects.filter(
             user=self.context.get('request').user,
-            following=following
+            author=author
         ).exists()
 
     def create(self, validated_data):
