@@ -1,23 +1,16 @@
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import TokenCreateView
-from rest_framework import status, viewsets, filters
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from recipes.models import *
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
-
-from recipes.models import Tag, Recipe, Ingredient, IngredientList, FavouriteRecipe
-from users.models import User
-from users.serializers import UserSerializer
-
-from foodgram.settings import EMAIL_ADMIN
-
+from django.template.loader import get_template
 from .filtres import *
-#from .mixins import ListCreateDestroyViewSet
-from .permissions import (IsAuthorOrReadOnly,)
+from .permissions import IsAuthorOrReadOnly
 from .serializers import *
 
 
@@ -28,19 +21,19 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.select_related('author').prefetch_related(
-        'ingredients'
-    ).all()
-    filterset_class = RecipeFilter
-    serializer_class = RecipeSerializer
+    queryset = Recipe.objects.select_related(
+        'author'
+    ).prefetch_related('ingredients').all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly,]
+    serializer_class = RecipeSerializer
+    filterset_class = RecipeFilter
 
     @staticmethod
-    def add_or_delete(request, model, serializer, pk):
+    def add_or_delete(request, serializer, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         if request.method != 'POST':
             get_object_or_404(
-                model,
+                Recipe,
                 user=request.user,
                 recipe=recipe,
             ).delete()
@@ -52,54 +45,56 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def update(self, serializer):
+        serializer.save(author=self.request.user)
 
     @action(
         detail=False,
         methods=['get', 'delete'],
         permission_classes=[IsAuthenticated],
-        serializer_class=(FavouriteRecipeSerializer),
-        filterset_class=RecipeFauvariteFilter,
+        filterset_class=RecipeFavoriteFilter,
         url_name='favorite',
         url_path=r'(?P<id>[\d]+)/favorite',
+        serializer_class=FavoriteRecipe,
     )
-    def favorite(self, request, **kwargs):
+    def favorite(self, request,):
         user = request.user
-        recipes = get_object_or_404(FavouriteRecipe, id=kwargs['id'])
-        fav = User.objects.filter(
-            id=user.id,
-            favourite_recipe=recipes
-        ).exists()
+        obj = self.get_object()
+        fav = FavoriteRecipe.objects.filter(user=user, favorite=obj).exists()
         if request.method == 'GET' and not fav:
-            recipes.favorite.add(user)
-            serializer = UserSerializer(recipes)
+            FavoriteRecipe.objects.create(user=user, favorite=obj)
+            serializer = self.get_serializer(obj)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE' and fav:
-            recipes.favorite.remove(user)
+            FavoriteRecipe.objects.filter(user=user, favorite=obj).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'Is not Authenticated'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     
     @action(
         detail=False,
         methods=['get', 'delete'],
         permission_classes=[IsAuthenticated],
-        url_path='shopping_cart',
+        url_path=r'(?P<id>[\d]+)/shopping_cart',
         url_name='shopping_cart',
     )
-    def shopping_cart(self, request, **kwargs):
+    def shopping_cart(self, request,):
         user = request.user
-        recipes = get_object_or_404(FavouriteRecipe, id=kwargs['id'])
-        add = User.objects.filter(
-            recipes=recipes,
-            id=user.id,
-        ).exists()
-        if request.method == 'DELETE' and add:
-            user.cart.recipes.remove(recipes)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        if request.method == 'GET' and not add:
-            user.cart.recipes.add(recipes)
-            serializer = UserSerializer(recipes)
+        obj = self.get_object()
+        in_cart = IngredientList.objects.filter(customer=user, cart=obj).exists()
+        if request.method == 'GET' and not in_cart:
+            IngredientList.objects.create(customer=user, cart=obj)
+            serializer = self.get_serializer(obj)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        if request.method == 'DELETE' and in_cart:
+            IngredientList.objects.filter(customer=user, cart=obj).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'error': 'Is not Authenticated.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @action(
         detail=False,
@@ -108,20 +103,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path='download_shopping_cart',
     )
     def download_shopping_cart(self, request):
-        ingredients = (
-            IngredientList.objects
-            .select_related('ingredient', 'recipe')
-            .prefetch_related('purchases')
-            .filter(recipe__ingredients__user=request.user)
-            .values_list('ingredient__name', 'ingredient__measurement_unit')
-            .annotate(amount=sum('amount'))
+        user = request.user
+        in_cart = Recipe.objects.filter(ingredient_list__customer=user)
+        queryset = in_cart.values_list(
+            'ingredients__name',
+            'ingredients__measurement_unit',
+        ).annotate(
+            amount_sum=Sum('ingredients__amount')
         )
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = ('attachment;'
-                                           'filename="Your_shopping_list.csv"')
+        text = 'Список покупок: \n'
+        for ingredient in queryset:
+            text += (
+                f"{list(ingredient)[0]} - "
+                f"{list(ingredient)[2]} "
+                f"{list(ingredient)[1]} \n"
+            )
+        response = HttpResponse(text, 'Content-Type: application/txt')
+        response['Content-Disposition'] = 'attachment; filename="wishlist"'
         return response
-
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -130,24 +129,6 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     pagination_class = None
     
-
-
-#class APIChange_Password(APIView):
-#    def post(self, request, *args, **kwargs):
-#        serializer = PasswordSerializer(data=request.data)
-#        if serializer.is_valid():
-#            data = request.data
-#            password = data['current_password'] 
-#            user = User.objects.get(password=password)
-#            if not user.check_password(serializer.data.get('current_password')):
-#                return Response({'current_password': ['Wrong password.']}, 
-#                                status=status.HTTP_400_BAD_REQUEST)
-#            user.set_password(serializer.data.get('new_password'))
-#            user.save()
-#            return Response({'status': 'password set'}, status=status.HTTP_200_OK)
-#
-#        return Response(serializer.errors, 
-#                        status=status.HTTP_400_BAD_REQUEST)
 
 class CreateTokenView(TokenCreateView):
 

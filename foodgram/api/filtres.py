@@ -1,6 +1,6 @@
 from turtle import color
 from django_filters import rest_framework as filters
-from recipes.models import FavouriteRecipe, Recipe
+from recipes.models import FavoriteRecipe, Recipe
 
 
 class IngredientFilter(filters.FilterSet):
@@ -9,7 +9,7 @@ class IngredientFilter(filters.FilterSet):
     )
 
 
-class RecipeFauvariteFilter(filters.FilterSet):
+class RecipeFavoriteFilter(filters.FilterSet):
     user = filters.CharFilter(
         field_name='user',
     )
@@ -31,7 +31,7 @@ class RecipeFauvariteFilter(filters.FilterSet):
         return queryset
 
     class Meta:
-        model = FavouriteRecipe
+        model = FavoriteRecipe
         fields = (
             'user',
         )

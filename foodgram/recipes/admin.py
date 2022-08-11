@@ -5,7 +5,7 @@ from .models import *
 
 
 site.register(IngredientList)
-site.register(FavouriteRecipe)
+#site.register(FavoriteRecipe)
 site.register(Recipe)
 site.register(Tag)
 site.register(Ingredient)

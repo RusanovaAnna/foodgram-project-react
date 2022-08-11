@@ -2,7 +2,7 @@ from colorfield.fields import ColorField
 from django.core.validators import MinValueValidator
 from django.db import models
 
-#from .validators import year_validator
+from .validators import year_validator
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -125,21 +125,21 @@ class Recipe(models.Model):
         validators=[MinValueValidator(MIN)],
         verbose_name='cooking time',
     )
-    #date = models.DateTimeField(
+    #pub_date = models.DateTimeField(
     #    auto_now_add=True,
     #    verbose_name='date',
     #    validators=[year_validator],
     #)
 
     class Meta:
-        verbose_name = 'Recipe'
-        verbose_name_plural = 'Recipes'
         constraints = [
             models.UniqueConstraint(
                 fields=['author'],
                 name='unique_recipe',
             )
         ]
+        verbose_name = 'Recipe'
+        verbose_name_plural = 'Recipes'
 
     def __str__(self):
         return self.name
@@ -148,7 +148,7 @@ class Recipe(models.Model):
         return self.tags.values_list('name', flat=True)
 
 
-class FavouriteRecipe(models.Model):
+class FavoriteRecipe(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='favourite_recipes',

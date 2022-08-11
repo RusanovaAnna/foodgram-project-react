@@ -49,14 +49,13 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        queryset = Follow.objects.filter(user=user)
-        pages = self.paginate_queryset(queryset)
-        serializer = FollowSerializer(
-            pages,
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
+        follows = User.objects.filter(follower__following=user)
+        page = self.paginate_queryset(follows)
+        if page is not None:
+            serializer = FollowSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = FollowSerializer(follows, many=True)
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -66,29 +65,23 @@ class UserViewSet(viewsets.ModelViewSet):
         url_name='subscribe',
         pagination_class=None,
     )
-    def subscribe(self, request, **kwargs):
+    def subscribe(self, request, id=None):
         user = request.user
-        author = get_object_or_404(User, id=kwargs['id'])
-        subscription = Follow.objects.filter(
-            author=author,
-            user=user,
-        )
-        if (request.method == 'GET'
-            and user != author
-            and not subscription.exists()):
-            Follow.objects.create(
-                user=user,
-                author=author,
-            )
-            serializer = UserSerializer(
-                author,
-                context={'request': request},
-            )
+        obj = self.get_object()
+        is_subscribed = Follow.objects.filter(
+            following=user, follower=obj
+        ).exists()
+        if request.method == 'GET' and not is_subscribed:
+            Follow.objects.create(following=user, follower=obj)
+            serializer = self.get_serializer(obj)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE' and subscription.exists():
-            subscription.delete()
+        if request.method == 'DELETE' and is_subscribed:
+            Follow.objects.filter(following=user, follower=obj).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'Is not Authenticated'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @action(
         methods=['post'],

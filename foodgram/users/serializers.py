@@ -9,16 +9,9 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
 
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
-
-    def get_is_subscribed(self, author):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Follow.objects.filter(
-            user=self.context.get('request').user,
-            author=author
-        ).exists()
+    is_subscribed = serializers.SerializerMethodField(
+        read_only=True
+    )
 
     def create(self, validated_data):
         user = User(
@@ -30,6 +23,16 @@ class UserSerializer(serializers.ModelSerializer):
         )
         user.save()
         return user
+
+    def get_is_subscribed(self, author):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Follow.objects.filter(
+            user=self.context.get('request').user,
+            author=author
+        ).exists()
+
     class Meta:
         model = User
         fields = (
