@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from .models import User
 from recipes.models import Follow
 
@@ -49,3 +50,19 @@ class MeSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email',
                   'first_name', 'last_name',)
+
+
+class FollowSerializer(serializers.ModelSerializer):
+    queryset = User.objects.all()
+    user = serializers.PrimaryKeyRelatedField(queryset=queryset)
+    author = serializers.PrimaryKeyRelatedField(queryset=queryset)
+
+    class Meta:
+        model = Follow
+        fields = ('user', 'author')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'author')
+            )
+        ]

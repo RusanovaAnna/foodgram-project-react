@@ -49,8 +49,6 @@ class UnitOfMeasurement(models.Model):
         gram = _('gram'), _('грамм')
         milliliter = _('milliliter'), _('мл')
 
-        
-
     name = models.CharField(
         max_length=255,
         verbose_name='name',
@@ -195,7 +193,6 @@ class FavouriteRecipe(models.Model):
         return f'{self.user.username} - {self.recipe.name}'
 
 
-
 class IngredientList(models.Model):
     recipe = models.ForeignKey(
         'Recipe',
@@ -214,6 +211,7 @@ class IngredientList(models.Model):
         validators=[MinValueValidator(1)],
         verbose_name='amount',
     )
+
 
     class Meta:
         constraints = [

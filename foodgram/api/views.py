@@ -18,8 +18,7 @@ from foodgram.settings import EMAIL_ADMIN
 from .filtres import *
 #from .mixins import ListCreateDestroyViewSet
 from .permissions import (IsAuthorOrReadOnly,)
-from .serializers import (FavoriteRecipeSerializer, RecipeSerializer,
-                          TagSerializer, IngredientSerializer)
+from .serializers import *
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -33,7 +32,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         'ingredients'
     ).all()
     filterset_class = RecipeFilter
-    serializer_class = (RecipeSerializer,)
+    serializer_class = RecipeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly,]
 
     @staticmethod
@@ -57,8 +56,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get', 'delete'],
-        permission_classes=IsAuthenticated,
-        serializer_class=FavoriteRecipeSerializer,
+        permission_classes=[IsAuthenticated],
+        serializer_class=(FavouriteRecipeSerializer),
         filterset_class=RecipeFauvariteFilter,
         url_name='favorite',
         url_path=r'(?P<id>[\d]+)/favorite',
@@ -82,7 +81,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get', 'delete'],
-        permission_classes=IsAuthenticated,
+        permission_classes=[IsAuthenticated],
         url_path='shopping_cart',
         url_name='shopping_cart',
     )
@@ -113,7 +112,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             IngredientList.objects
             .select_related('ingredient', 'recipe')
             .prefetch_related('purchases')
-            .filter(recipe__purchases__user=request.user)
+            .filter(recipe__ingredients__user=request.user)
             .values_list('ingredient__name', 'ingredient__measurement_unit')
             .annotate(amount=sum('amount'))
         )
