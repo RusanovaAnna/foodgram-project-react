@@ -122,7 +122,7 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     
 
-class CreateTokenView(TokenCreateView):
+class CustomTokenCreateView(TokenCreateView):
 
     def _action(self, serializer):
         response = super()._action(serializer)

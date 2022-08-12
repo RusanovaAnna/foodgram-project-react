@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 
 from .models import *
 
-
 site.register(IngredientList)
 site.register(Follow)
 site.register(Recipe)

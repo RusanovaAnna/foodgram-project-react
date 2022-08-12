@@ -1,12 +1,15 @@
 from api.pagination import UserPagination
+from django.shortcuts import get_object_or_404
 from recipes.models import Follow
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
 from users.models import User
 
-from .serializers import FollowSerializer, UserSerializer, MeSerializer, SetPasswordSerializer
+from .serializers import (FollowSerializer, MeSerializer,
+                          SetPasswordSerializer, UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -34,7 +37,7 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        follows = User.objects.filter(follower__following=user)
+        follows = Follow.objects.filter(user=user)
         page = self.paginate_queryset(follows)
         if page is not None:
             serializer = FollowSerializer(page, many=True)
@@ -50,23 +53,31 @@ class UserViewSet(viewsets.ModelViewSet):
         url_name='subscribe',
         pagination_class=None,
     )
-    def subscribe(self, request, id=None):
+    def subscribe(self, request, id):
         user = request.user
-        obj = self.get_object()
-        is_subscribed = Follow.objects.filter(
-            author=user, user=obj
-        ).exists()
-        if request.method == 'POST' and not is_subscribed:
-            Follow.objects.create(author=user, user=obj)
-            serializer = self.get_serializer(obj)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE' and is_subscribed:
-            Follow.objects.filter(author=user, user=obj).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'Is not Authenticated'},
-            status=status.HTTP_400_BAD_REQUEST,
+        author = get_object_or_404(User, id=id)
+        subscription = Follow.objects.filter(
+            user=user,
+            author=author
         )
+        if (
+            request.method == 'GET'
+            and not subscription.exists()
+            and user != author
+        ):
+            Follow.objects.create(
+                user=user,
+                author=author
+            )
+            serializer = UserSerializer(
+                author,
+                context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE' and subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         methods=['POST'],

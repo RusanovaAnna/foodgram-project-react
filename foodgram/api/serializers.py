@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from drf_extra_fields.fields import HybridImageField
-from recipes.models import FavoriteRecipe, Ingredient, Recipe, Tag, IngredientList
+from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
+                            Tag)
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 from users.models import User
@@ -66,15 +67,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         return data
         
 
-    @staticmethod
-    def get_ingredients(instance, ingredients):
-        for ingredient in ingredients:
-            Ingredient.objects.get_or_create(
-                ingredient=ingredient['ingredient'],
-                amount=ingredient['amount'],
-                recipe=instance
-            )
-
     def create(self, validated_data):
         if 'tags' in validated_data:
             tags = validated_data.pop('tags')
@@ -85,31 +77,44 @@ class RecipeSerializer(serializers.ModelSerializer):
         self.get_ingredients(recipe, ingredients)
         return recipe
 
-    
+
+    @staticmethod
+    def get_ingredients(instance, ingredients):
+        for ingredient in ingredients:
+            Ingredient.objects.get_or_create(
+                ingredient=ingredient['ingredient'],
+                amount=ingredient['amount'],
+                recipe=instance
+            )
+
     @transaction.atomic
     def update(self, instance, validated_data):
-        update = {
-            'image': None,
-            'ingredients': None,
-            'tags': None
-        }
-        for up in update:
-            if up in validated_data:
-                update[up] = validated_data.pop(up)
-
-        if update['image']:
-            instance.image = update['image']
-        instance = super().update(instance, validated_data)
-
-        self.ingrs_tags_update(update['ingredients'],
-                               update['tags'], instance)
+        if 'tags' in validated_data:
+            tags = validated_data.pop('tags')
+            instance.tags.clear()
+            instance.tags.add(*tags)
+        if 'ingredients' in validated_data:
+            ingredients = validated_data.pop('ingredients')
+            Ingredient.objects.filter(recipe=instance).delete()
+            self.get_ingredients(instance, ingredients)
+        super().update(instance, validated_data)
         return instance
 
-    def get_is_favorited(self, obj): 
-        return getattr(obj, 'is_favorited', False) 
- 
-    def get_is_in_shopping_cart(self, obj): 
-        return getattr(obj, 'is_in_shopping_cart', False) 
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        user = request.user
+        return FavoriteRecipe.objects.filter(recipe=obj, user=user).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        user = request.user
+        return IngredientList.objects.filter(recipe=obj, user=user).exists()
+    #def get_is_in_shopping_cart(self, obj): 
+    #    return getattr(obj, 'is_in_shopping_cart', False) 
 
     
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
