@@ -35,39 +35,57 @@ class RecipeViewSet(viewsets.ModelViewSet):
      #   permission_classes=[IsAuthenticated],
      #   serializer_class=RecipeSerializer,
     #)
-    def create(request, serializer, self):
+    #def create(self, serializer, request, id=None):
         #if request.method != 'POST':
         #    serializer.delete(author=self.request.user)
         #    return Response(status=status.HTTP_204_NO_CONTENT)
         #serializer.save(author=self.request.user)
         #return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-
-    def update(self, serializer):
+    def update(self, serializer, id=None):
         serializer.save(author=self.request.user)
-
-    @action(
-        detail=False,
-        methods=['get', 'delete'],
-        permission_classes=[IsAuthenticated],
-        filterset_class=RecipeFavoriteFilter,
-        url_name='favorite',
-        url_path=r'(?P<id>[\d]+)/favorite',
-        serializer_class=FavoriteRecipeSerializer,
-    )
-    def favorite(self, request, id):
-        user = request.user
-        model = FavoriteRecipe.objects.filter(user=user, recipe__id=id).exists()
-        if request.method == 'GET' and not model:
-            recipe=get_object_or_404(Recipe, id=id)
-            FavoriteRecipe.objects.create(user=user, recipe=recipe)
-            serializer = FavoriteRecipeSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE' and model:
-            FavoriteRecipe.objects.filter(user=user, recipe__id=id).delete()
+    
+    def favorite_post_delete(self, related_manager, id=None):
+        recipe = self.get_object()
+        if self.request.method == 'DELETE':
+            related_manager.get(recipe_id=recipe.id).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        if related_manager.filter(recipe=recipe).exists():
+            raise ValidationError('Рецепт уже в избранном')
+        related_manager.create(recipe=recipe)
+        serializer = RecipeSerializer(instance=recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True,
+            permission_classes=[IsAuthenticated],
+            methods=['POST', 'DELETE'], )
+    def favorite(self, request, id=None):
+        return self.favorite_post_delete(
+            request.user.favorite
+        )
+    #@action(
+    #    detail=False,
+    #    methods=['get', 'delete'],
+    #    permission_classes=[IsAuthenticated],
+    #    filterset_class=RecipeFavoriteFilter,
+    #    url_name='favorite',
+    #    url_path=r'(?P<id>[\d]+)/favorite',
+    #    serializer_class=FavoriteRecipeSerializer,
+    #)
+    #def favorite(self, request, id):
+    #    user = request.user
+    #    model = FavoriteRecipe.objects.filter(user=user, recipe__id=id).exists()
+    #    if request.method == 'GET' and not model:
+    #        recipe=get_object_or_404(Recipe, id=id)
+    #        FavoriteRecipe.objects.create(user=user, recipe=recipe)
+    #        serializer = FavoriteRecipeSerializer(recipe)
+    #        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #    if request.method == 'DELETE' and model:
+    #        FavoriteRecipe.objects.filter(user=user, recipe__id=id).delete()
+     #       return Response(status=status.HTTP_204_NO_CONTENT)
+     #   return Response(status=status.HTTP_400_BAD_REQUEST)
     
     @action(
         detail=False,
