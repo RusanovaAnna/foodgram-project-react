@@ -1,9 +1,11 @@
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from drf_extra_fields.fields import HybridImageField
+from recipes.models import FavoriteRecipe, Ingredient, Recipe, Tag, IngredientList
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
+from users.models import User
 from users.serializers import UserSerializer
-from recipes.models import *
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -26,7 +28,9 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    ingredients = serializers.SerializerMethodField()
+    ingredients = IngredientSerializer(
+        many=True, source="ingredient_list"
+    )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = HybridImageField()
@@ -41,45 +45,71 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
+    
 
-    def get_ingredients(self, obj):
-        recipe = obj
-        queryset = recipe.ingredients.all()
-        return IngredientSerializer(queryset, many=True).data
+    def validate(self, data):
+        ingredients = []
+        for ingredient in data['ingredient_list']:
+            if ingredient['ingredient']['id'] not in ingredients:
+                ingredients.append(ingredient['ingredient']['id'])
+            else:
+                raise serializers.ValidationError(
+                    'Ingredients must not be repeated')
+        tags = []
+        for tag in data["tags"]:
+            if tag not in tags:
+                tags.append(tag)
+            else:
+                raise serializers.ValidationError(
+                    "Repeating tags are not allowed"
+                )
+        return data
         
 
+    @staticmethod
+    def get_ingredients(instance, ingredients):
+        for ingredient in ingredients:
+            Ingredient.objects.get_or_create(
+                ingredient=ingredient['ingredient'],
+                amount=ingredient['amount'],
+                recipe=instance
+            )
+
     def create(self, validated_data):
+        if 'tags' in validated_data:
+            tags = validated_data.pop('tags')
         if 'ingredients' in validated_data:
             ingredients = validated_data.pop('ingredients')
-        if 'tag' in validated_data:
-            tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.add(*tags)
-        self.add_ingredients(recipe, ingredients)
+        self.get_ingredients(recipe, ingredients)
         return recipe
-    
 
+    
     @transaction.atomic
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop('ingredients')
-        tags_data = validated_data.pop('tags')
-        IngredientList.objects.filter(recipe=instance).delete()
-        self.create_bulk(instance, ingredients_data)
-        instance.name = validated_data.pop('name')
-        instance.text = validated_data.pop('text')
-        instance.cooking_time = validated_data.pop('cooking_time')
-        if validated_data.get('image') is not None:
-            instance.image = validated_data.pop('image')
-        instance.save()
-        instance.tags.set(tags_data)
+        update = {
+            'image': None,
+            'ingredients': None,
+            'tags': None
+        }
+        for up in update:
+            if up in validated_data:
+                update[up] = validated_data.pop(up)
+
+        if update['image']:
+            instance.image = update['image']
+        instance = super().update(instance, validated_data)
+
+        self.ingrs_tags_update(update['ingredients'],
+                               update['tags'], instance)
         return instance
-    
-    def get_is_favorited(self, obj):
-        return getattr(obj, 'is_favorited', False)
 
-    def get_is_in_shopping_cart(self, obj):
-        return getattr(obj, 'is_in_shopping_cart', False)
-
+    def get_is_favorited(self, obj): 
+        return getattr(obj, 'is_favorited', False) 
+ 
+    def get_is_in_shopping_cart(self, obj): 
+        return getattr(obj, 'is_in_shopping_cart', False) 
 
     
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
@@ -96,17 +126,17 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
             return False
         return obj.is_favorited.filter(id=request.user.id).exists()
 
-    def get_is_in_shopping_cart(self, obj):
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return False
-        return obj.carts.filter(user=request.user).exists()
+    #def get_is_in_shopping_cart(self, obj):
+    #    request = self.context.get('request')
+    #    if not request or not request.user.is_authenticated:
+    #        return False
+    #    return obj.ingredients_list.filter(user=request.user).exists()
 
     def create(self,):
         user =  self.context['request'].user
         recipe_id = self.context.get('request').parser_context['kwargs']['id']
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        if FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists():
+        if FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists(): #validate
             if self.context['request'].method in ['POST']:
                 raise serializers.ValidationError(
                         'This recipe is already in favorites')

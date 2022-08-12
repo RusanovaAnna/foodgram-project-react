@@ -32,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
             user=self.context.get('request').user,
             author=author
         ).exists()
-
+    
     class Meta:
         model = User
         fields = (
@@ -69,3 +69,20 @@ class FollowSerializer(serializers.ModelSerializer):
                 fields=('user', 'author')
             )
         ]
+    
+    def validate(self, data):
+        if (data['user'] == data['following']
+                and self.context['request'].method == 'POST'):
+            raise serializers.ValidationError(
+                'You cant subscribe to yourself'
+            )
+        return data
+
+
+class SetPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(
+        min_length=8,
+        max_length=100,
+        write_only=True,
+    )
+    current_password = serializers.CharField(write_only=True)

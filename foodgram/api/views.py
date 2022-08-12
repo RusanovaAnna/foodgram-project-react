@@ -28,22 +28,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     filterset_class = RecipeFilter
 
-    @staticmethod
-    def add_or_delete(request, serializer, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        if request.method != 'POST':
-            get_object_or_404(
-                Recipe,
-                user=request.user,
-                recipe=recipe,
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = serializer(
-            data={'user': request.user.id, 'recipe': pk},
-            context={'request': request},)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #@staticmethod
+    #@action(
+     #   detail=False,
+     #   methods=['post', 'delete'],
+     #   permission_classes=[IsAuthenticated],
+     #   serializer_class=RecipeSerializer,
+    #)
+    def create(request, serializer, self):
+        #if request.method != 'POST':
+        #    serializer.delete(author=self.request.user)
+        #    return Response(status=status.HTTP_204_NO_CONTENT)
+        #serializer.save(author=self.request.user)
+        #return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer.save(author=self.request.user)
+
 
     def update(self, serializer):
         serializer.save(author=self.request.user)
@@ -55,23 +54,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         filterset_class=RecipeFavoriteFilter,
         url_name='favorite',
         url_path=r'(?P<id>[\d]+)/favorite',
-        serializer_class=FavoriteRecipe,
+        serializer_class=FavoriteRecipeSerializer,
     )
-    def favorite(self, request,):
+    def favorite(self, request, id):
         user = request.user
-        obj = self.get_object()
-        fav = FavoriteRecipe.objects.filter(user=user, favorite=obj).exists()
-        if request.method == 'GET' and not fav:
-            FavoriteRecipe.objects.create(user=user, favorite=obj)
-            serializer = self.get_serializer(obj)
+        model = FavoriteRecipe.objects.filter(user=user, recipe__id=id).exists()
+        if request.method == 'GET' and not model:
+            recipe=get_object_or_404(Recipe, id=id)
+            FavoriteRecipe.objects.create(user=user, recipe=recipe)
+            serializer = FavoriteRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE' and fav:
-            FavoriteRecipe.objects.filter(user=user, favorite=obj).delete()
+        if request.method == 'DELETE' and model:
+            FavoriteRecipe.objects.filter(user=user, recipe__id=id).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'Is not Authenticated'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     
     @action(
         detail=False,
@@ -80,21 +76,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path=r'(?P<id>[\d]+)/shopping_cart',
         url_name='shopping_cart',
     )
-    def shopping_cart(self, request,):
-        user = request.user
-        obj = self.get_object()
-        in_cart = IngredientList.objects.filter(customer=user, cart=obj).exists()
-        if request.method == 'GET' and not in_cart:
-            IngredientList.objects.create(customer=user, cart=obj)
-            serializer = self.get_serializer(obj)
+    def shopping_cart(self, request, id):
+        in_cart = IngredientList.objects.filter(recipe__id=id).exists()
+        if request.method == 'POST' and not in_cart:
+            recipe=get_object_or_404(Recipe, id=id)
+            IngredientList.objects.create(recipe__id=id)
+            serializer = RecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE' and in_cart:
-            IngredientList.objects.filter(customer=user, cart=obj).delete()
+            IngredientList.objects.filter(recipe__id=id).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'error': 'Is not Authenticated.'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -104,12 +96,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         user = request.user
-        in_cart = Recipe.objects.filter(ingredient_list__customer=user)
+        in_cart = Recipe.objects.filter(author=user)
         queryset = in_cart.values_list(
             'ingredients__name',
             'ingredients__measurement_unit',
         ).annotate(
-            amount_sum=Sum('ingredients__amount')
+            amount_sum=Sum('ingredient_list__amount')
         )
         text = 'Список покупок: \n'
         for ingredient in queryset:
@@ -119,7 +111,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 f"{list(ingredient)[1]} \n"
             )
         response = HttpResponse(text, 'Content-Type: application/txt')
-        response['Content-Disposition'] = 'attachment; filename="wishlist"'
+        response['Content-Disposition'] = 'attachment; filename="yourwishlist"'
         return response
 
 

@@ -193,7 +193,6 @@ class IngredientList(models.Model):
     )
     ingredient = models.ForeignKey(
         Ingredient,
-        related_name='ingredient_list',
         on_delete=models.SET_NULL,
         null=True,
         verbose_name='ingredient',
@@ -242,4 +241,4 @@ class Follow(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.username} follow for {self.following}'
+        return f'{self.user} follow for {self.author}'
