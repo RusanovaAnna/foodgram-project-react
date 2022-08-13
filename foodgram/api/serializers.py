@@ -263,18 +263,21 @@ class RecipeSerializer(serializers.ModelSerializer):
                 self.get_ingredients_tags(ingredients, tags, recipe)
 
 
-    def bool_response(self, request_obj, main_obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return main_obj.objects.filter(user=request.user,
-                                       recipe=request_obj.id).exists()
-
-
     def get_is_favorited(self, obj):
-        return self.bool_response(obj, FavoriteRecipe)
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return FavoriteRecipe.objects.filter(
+            recipe=obj, 
+            user=request.user
+        ).exists()
 
 
     def get_is_in_shopping_cart(self, obj):
-        return self.bool_response(obj, Shop)
-
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return Shop.objects.filter(
+            recipe=obj,
+            user=request.user
+        ).exists()

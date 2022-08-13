@@ -40,7 +40,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        user = self.request.user
+        serializer.save(author=user)
 
 
     def perform_update(self, serializer):
@@ -58,13 +59,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk):
         user = request.user
         recipe=get_object_or_404(Recipe, id=pk,)
-        model = FavoriteRecipe.objects.filter(user=user, recipe__id=pk).exists()
+        model = FavoriteRecipe.objects.filter(recipe=recipe, user=user).exists()
         if request.method == 'POST' and not model:
-            FavoriteRecipe.objects.filter(user=user, recipe=recipe).create()
+            FavoriteRecipe.objects.create(user=user, recipe=recipe)
             serializer = FavoriteRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE' and model:
-            FavoriteRecipe.objects.filter(user=user, recipe__id=pk).delete()
+            obj = get_object_or_404(
+                FavoriteRecipe, recipe=recipe, user=user
+            )
+            obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -87,7 +91,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             IngredientList.objects.filter(recipe_id=pk).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-
+    
 
     @action(
         detail=False,
