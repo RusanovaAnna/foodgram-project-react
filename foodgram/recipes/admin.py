@@ -8,6 +8,7 @@ site.register(Follow)
 site.register(Recipe)
 site.register(Tag)
 site.register(Ingredient)
+site.register(FavoriteRecipe)
 
 
 class TagAdmin(ModelAdmin):

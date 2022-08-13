@@ -147,13 +147,13 @@ class Recipe(models.Model):
 class FavoriteRecipe(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='favourite_recipes',
+        related_name='favorite_recipes',
         on_delete=models.CASCADE,
         verbose_name='user',
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name='favourite',
+        related_name='favorite',
         on_delete=models.CASCADE,
         verbose_name='recipe',
     )
@@ -170,7 +170,7 @@ class FavoriteRecipe(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'user'],
-                name='unique_favourite_recipe',
+                name='unique_favorite_recipe',
             )
         ]
         verbose_name = _('Favorites')
