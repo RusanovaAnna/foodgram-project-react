@@ -18,6 +18,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
     pagination_class = UserPagination
 
+
     @action(detail=False,
             methods=['get', 'patch', ],
             permission_classes=[IsAuthenticated,],
@@ -27,6 +28,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, pk=None):
         serializer = self.get_serializer(self.request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     @action(
         methods=['get'],
@@ -44,6 +46,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = FollowSerializer(follows, many=True)
         return Response(serializer.data)
+
 
     @action(
         detail=False,
@@ -78,6 +81,7 @@ class UserViewSet(viewsets.ModelViewSet):
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
     @action(
         methods=['POST'],

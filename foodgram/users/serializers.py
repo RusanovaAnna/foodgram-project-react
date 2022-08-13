@@ -14,6 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+
     def create(self, validated_data):
         user = User(
             email=validated_data['email'],
@@ -25,6 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
     def get_is_subscribed(self, author):
         user = self.context.get('request').user
         if user.is_anonymous:
@@ -34,6 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
             author=author
         ).exists()
     
+
     class Meta:
         model = User
         fields = (
@@ -50,6 +53,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
+
+
     class Meta:
         model = User
         fields = ('username', 'email',
@@ -61,6 +66,7 @@ class FollowSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=queryset)
     author = serializers.PrimaryKeyRelatedField(queryset=queryset)
 
+
     class Meta:
         model = Follow
         fields = ('user', 'author')
@@ -71,6 +77,7 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         ]
     
+
     def validate(self, data):
         if (data['user'] == data['following']
                 and self.context['request'].method == 'POST'):
