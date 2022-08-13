@@ -83,55 +83,81 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
         return data
     
-    @staticmethod
-    def ingredients_create(ingredients, recipe):
-        for ingredient in ingredients:
-            Ingredient.objects.create(
-                recipe=recipe, ingredient=ingredient['id'],
-                amount=ingredient['amount']
-            )
-
-    #@staticmethod
-    #def tags_create(tags, recipe):
-    #    for tag in tags:
-    #        recipe.tags.add(tag)
-
     def create(self, validated_data):
         image = validated_data.pop('image')
-        ingredients_data = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(image=image, **validated_data)
-        tags_data = self.initial_data.get('tags')
-        recipe.tags.set(tags_data)
-        self.ingredients_create(ingredients_data, recipe)
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        with transaction.atomic():
+            recipe = Recipe.objects.create(image=image,
+                                           **validated_data)
+        self.get_ingredients_tags(ingredients, tags, recipe)
         return recipe
 
-    def get_ingredients(instance, ingredients):
-        for ingredient in ingredients:
-            Ingredient.objects.get_or_create(
-                ingredient=ingredient['ingredient'],
-                amount=ingredient['amount'],
-                recipe=instance
-            )
+    def get_ingredients_tags(self, ingredients, tags, recipe):
+        self.get_ingredients(ingredients, recipe)
+        self.get_tags(tags, recipe)
+
+    def get_ingredients(self, ingredients, recipe):
+        with transaction.atomic():
+            for ingredient in ingredients:
+                amount = ingredient.get('amount')
+                if not amount:
+                    amount = 0
+                ingredient_amount = IngredientList.objects.create(
+                    recipe=recipe,
+                    ingredient_id=ingredient.get('id'),
+                    amount=amount
+                )
+                ingredient_amount.save()
+
+    def get_tags(self, tags, recipe):
+        with transaction.atomic():
+            for tag_id in tags:
+                recipe_tag = Tag.objects.create(
+                    recipe=recipe,
+                    tag_id=tag_id,
+                )
+                recipe_tag.save()
 
     def update(self, instance, validated_data):
-        if 'tags' in validated_data:
-            tags = validated_data.pop('tags')
-            instance.tags.clear()
-            instance.tags.add(*tags)
-        if 'ingredients' in validated_data:
-            ingredients = validated_data.pop('ingredients')
-            IngredientList.objects.filter(recipe=instance).delete()
-            self.ingredients_create(instance, ingredients)
-        super().update(instance, validated_data)
+        update = {
+            'image': None,
+            'ingredients': None,
+            'tags': None
+        }
+        for u in update:
+            if u in validated_data:
+                update[u] = validated_data.pop(u)
+
+        if update['image']:
+            instance.image = update['image']
+        instance = super().update(instance, validated_data)
+
+        self.update_igredients_tags(update['ingredients'],
+                               update['tags'], instance)
         return instance
 
-    def get_is_favorited(self, obj,):
+    def update_igredients_tags(self, ingredients, tags, recipe):
+        method = self.context.get('request').method
+        with transaction.atomic():
+            if method == 'PATCH':
+                if ingredients:
+                    IngredientList.objects.filter(recipe=recipe).delete()
+                    self.ingrs_create(ingredients, recipe)
+                if tags:
+                    Tag.objects.filter(recipe=recipe).delete()
+                    self.tags_create(tags, recipe)
+            else:
+                IngredientList.objects.filter(recipe=recipe).delete()
+                Tag.objects.filter(recipe=recipe).delete()
+                self.get_ingredients_tags(ingredients, tags, recipe)
+
+    def get_is_favorited(self, request,):
         request = self.context.get('request')
         if not request or request.user.is_anonymous:
             return False
         return FavoriteRecipe.objects.filter(
-            recipe=obj,
-            user=request.user
+            id=request.user.id,
         ).exists()
 
     def get_is_in_shopping_cart(self, obj,):
@@ -144,32 +170,20 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    #recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = FavoriteRecipe
         fields = '__all__',   
 
-    def get_is_favorited(self, obj):
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return False
-        return obj.is_favorited.filter(id=request.user.id).exists()
-
-    #def get_is_in_shopping_cart(self, obj):
-    #    request = self.context.get('request')
-    #    if not request or not request.user.is_authenticated:
-    #        return False
-    #    return obj.ingredients_list.filter(user=request.user).exists()
-
-    def create(self,):
-        user =  self.context['request'].user
-        recipe_id = self.context.get('request').parser_context['kwargs']['id']
-        recipe = get_object_or_404(Recipe, id=recipe_id)
-        if FavoriteRecipe.objects.filter(user=user, favorite=recipe).exists(): #validate
-            if self.context['request'].method in ['POST']:
-                raise serializers.ValidationError(
-                        'This recipe is already in favorites')
-        return FavoriteRecipe.objects.create(user=user, favorite=recipe)
+    #def create(self,):
+    #    user =  self.context['request'].user
+    #    recipe_id = self.context.get('request').parser_context['kwargs']['id']
+    #    recipe = get_object_or_404(Recipe, id=recipe_id)
+    #    if FavoriteRecipe.objects.filter(user=user, favorite=recipe).exists(): #validate
+    #        if self.context['request'].method in ['POST']:
+    #            raise serializers.ValidationError(
+    #                    'This recipe is already in favorites')
+    #    return FavoriteRecipe.objects.create(user=user, favorite=recipe)
 
