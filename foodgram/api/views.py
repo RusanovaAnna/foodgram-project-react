@@ -2,9 +2,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import TokenCreateView
-from recipes.models import (FavoriteRecipe, Ingredient, Shop, Recipe,
-                            Tag)
-from requests import delete
+from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
@@ -14,10 +12,9 @@ from rest_framework.validators import ValidationError
 
 from .filtres import IngredientFilter, RecipeFavoriteFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (FavoriteRecipeSerializer,
-                          IngredientSerializer, RecipeAddSerializers,
-                          RecipeSerializer, RecipeShortSerializer,
-                          ShopSerializer, TagSerializer)
+from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
+                          RecipeAddSerializers, RecipeSerializer,
+                          RecipeShortSerializer, ShopSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
