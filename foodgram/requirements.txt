@@ -7,7 +7,7 @@ coreapi==2.3.3
 coreschema==0.0.4
 cryptography==37.0.4
 defusedxml==0.7.1
-Django==3.2.15)
+Django==3.2.15
 django-colorfield==0.7.2
 django-cors-headers==3.13.0
 django-extensions==3.2.0
@@ -15,7 +15,7 @@ django-filter==22.1
 django-templated-mail==1.1.1
 djangorestframework==3.13.1
 djangorestframework-simplejwt==5.2.0
-djoser==2.1.0
+djoser==4.3.0
 drf-extra-fields==3.4.0
 drf-yasg==1.21.3
 flake8==5.0.0
