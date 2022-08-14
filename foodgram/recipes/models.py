@@ -5,7 +5,6 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from users.models import User
 
-#from .validators import year_validator
 
 MIN = 1
 
@@ -76,7 +75,7 @@ class Ingredient(models.Model):
         verbose_name='name',
         )
     measurement_unit = models.CharField(
-        UnitOfMeasurement,
+        'unit of measurement',
         max_length=200,
         )
 
@@ -131,11 +130,6 @@ class Recipe(models.Model):
         validators=[MinValueValidator(MIN)],
         verbose_name='cooking time',
     )
-    #pub_date = models.DateTimeField(
-    #    auto_now_add=True,
-    #    verbose_name='date',
-    #    validators=[year_validator],
-    #)
 
 
     class Meta:
@@ -256,7 +250,7 @@ class IngredientList(models.Model):
         on_delete=models.CASCADE,
         verbose_name='ingredient',
         related_name='ingredient_list',
-        null=True,
+        null=True
     )
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],

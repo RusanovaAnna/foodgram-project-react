@@ -2,7 +2,9 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import TokenCreateView
-from recipes.models import *
+from requests import delete
+from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
+                            Tag)
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
@@ -13,7 +15,7 @@ from .filtres import IngredientFilter, RecipeFavoriteFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientListSerializer,
                           IngredientSerializer, RecipeSerializer,
-                          ShopSerializer, TagSerializer)
+                          ShopSerializer, TagSerializer, RecipeAddSerializers)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -39,34 +41,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.serializer_class
     
 
+    @action(
+        detail=True,
+        serializer_class=RecipeAddSerializers,
+    )
     def perform_create(self, serializer):
         user = self.request.user
         serializer.save(author=user)
-
-
-    def perform_update(self, serializer):
-        serializer.save(author=self.request.user)
     
 
-    @action(
-        detail=True, 
-        methods=['POST', 'DELETE', 'GET'], 
-        permission_classes=[IsAuthenticated],
-        url_name='favorite',
-        #url_path=r'(?P<id>[\d]+)/favorite',
-        filterset_class=RecipeFavoriteFilter,
-    )
-    def favorite(self, request, pk):
+    def create_delete(self, model, serializer_model, request, pk):
         user = request.user
         recipe=get_object_or_404(Recipe, id=pk,)
-        model = FavoriteRecipe.objects.filter(recipe=recipe, user=user).exists()
-        if request.method == 'POST' and not model:
-            FavoriteRecipe.objects.create(user=user, recipe=recipe)
-            serializer = FavoriteRecipeSerializer(recipe)
+        obj = model.objects.filter(recipe=recipe, user=user).exists()
+        if request.method == 'POST' and not obj:
+            model.objects.create(user=user, recipe=recipe)
+            serializer = serializer_model(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE' and model:
+        if request.method == 'DELETE' and obj:
             obj = get_object_or_404(
-                FavoriteRecipe, recipe=recipe, user=user
+                model, recipe=recipe, user=user
             )
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -74,23 +68,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
     @action(
+        detail=True, 
+        methods=['POST', 'DELETE', 'GET'], 
+        permission_classes=[IsAuthenticated],
+        url_name='favorite',
+        filterset_class=RecipeFavoriteFilter,
+    )
+    def favorite(self, request, pk):
+        return self.create_delete(
+            FavoriteRecipe, FavoriteRecipeSerializer, request, pk
+        )
+
+
+    @action(
         detail=False,
-        methods=['get', 'post', 'delete'],
+        methods=['POST', 'DELETE', 'GET'],
         permission_classes=[IsAuthenticated],
         url_path=r'(?P<pk>[\d]+)/shopping_cart',
         url_name='shopping_cart',
     )
     def shopping_cart(self, request, pk):
-        in_cart = IngredientList.objects.filter(recipe_id=pk).exists()
-        if request.method == 'POST' and not in_cart:
-            recipe=get_object_or_404(Recipe, id=pk)
-            IngredientList.objects.create(recipe_id=pk)
-            serializer = IngredientListSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE' and in_cart:
-            IngredientList.objects.filter(recipe_id=pk).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return self.create_delete(
+            IngredientList, IngredientListSerializer, request, pk
+        )
     
 
     @action(

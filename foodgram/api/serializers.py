@@ -110,157 +110,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
-  
-
-    def validate(self, data):
-        method = self.context.get('request').method
-        author = self.context.get('request').user
-        recipe_name = data.get('name')
-        ingredients = self.initial_data.get('ingredients')
-        tags = self.initial_data.get('tags')
-        if method == 'PATCH':
-            if ingredients:
-                self.ingredients_validate(ingredients)
-                data['ingredients'] = ingredients
-            if tags:
-                self.tag_validate(tags)
-                data['tags'] = tags
-        if method in ('POST', 'PUT'):
-            if (method == 'POST'
-                and Recipe.objects.filter(author=author,
-                                          name=recipe_name).exists()):
-                raise serializers.ValidationError(
-                    'You already have this recipe)'
-                )
-            self.ingredients_validate(ingredients)
-            self.tag_validate(tags)
-
-            if method == 'POST':
-                data['author'] = author
-            data['ingredients'] = ingredients
-            data['tags'] = tags
-        return data
-
-
-    def ingredients_validate(self, ingredients):
-        ingredients_set = set()
-        if not ingredients:
-            raise serializers.ValidationError(
-                'Ingredient must be added)'
-            )
-        for ingredient in ingredients:
-            amount = ingredient.get('amount')
-            ingredient_id = ingredient.get('id')
-            if not Ingredient.objects.filter(id=ingredient_id).exists():
-                raise serializers.ValidationError(
-                    'There is no such ingredient yet('
-                )
-            if ingredient_id in ingredients_set:
-                raise serializers.ValidationError(
-                    'Ingredient should not be repeated))'
-                )
-            try:
-                int(amount)
-            except ValueError:
-                raise serializers.ValidationError(
-                    'Ingredient quantity must be a number'
-                )
-            if int(amount) < 1:
-                raise serializers.ValidationError(
-                    'Is the quantity value exactly greater than 1?'
-                )
-            ingredients_set.add(ingredient_id)
-
-
-    def tag_validate(self, tags):
-        if not tags:
-            raise serializers.ValidationError(
-                'Tag must be added)'
-            )
-        if len(tags) > len(set(tags)):
-            raise serializers.ValidationError(
-                'Tags shoud be unique)'
-            )
-        for tag_id in tags:
-            if not Tag.objects.filter(id=tag_id).exists():
-                raise serializers.ValidationError(
-                    'This tag doesnt exist yet{'
-                )
-    
-
-    def create(self, validated_data):
-        image = validated_data.pop('image')
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
-        with transaction.atomic():
-            recipe = Recipe.objects.create(image=image,
-                                           **validated_data)
-        self.get_ingredients_tags(ingredients, tags, recipe)
-        return recipe
-
-
-    def get_ingredients_tags(self, ingredients, tags, recipe):
-        self.get_ingredients(ingredients, recipe)
-        self.get_tags(tags, recipe)
-
-
-    def get_ingredients(self, ingredients, recipe):
-        with transaction.atomic():
-            for ingredient in ingredients:
-                amount = ingredient.get('amount')
-                if not amount:
-                    amount = 0
-                ingredient_amount = IngredientList.objects.create(
-                    recipe=recipe,
-                    ingredient_id=ingredient.get('id'),
-                    amount=amount
-                )
-                ingredient_amount.save()
-
-
-    def get_tags(self, tags, recipe):
-        with transaction.atomic():
-            for tag_id in tags:
-                recipe_tag = TagInRecipe.objects.create(
-                    recipe=recipe,
-                    tag_id=tag_id,
-                )
-                recipe_tag.save()
-
-
-    def update(self, instance, validated_data):
-        update = {
-            'image': None,
-            'ingredients': None,
-            'tags': None
-        }
-        for u in update:
-            if u in validated_data:
-                update[u] = validated_data.pop(u)
-
-        if update['image']:
-            instance.image = update['image']
-        instance = super().update(instance, validated_data)
-
-        self.update_igredients_tags(update['ingredients'],
-                               update['tags'], instance)
-        return instance
-
-
-    def update_igredients_tags(self, ingredients, tags, recipe):
-        method = self.context.get('request').method
-        with transaction.atomic():
-            if method == 'PATCH':
-                if ingredients:
-                    IngredientList.objects.filter(recipe=recipe).delete()
-                    self.get_ingredients(ingredients, recipe)
-                if tags:
-                    TagInRecipe.objects.filter(recipe=recipe).delete()
-                    self.get_tags(tags, recipe)
-            else:
-                IngredientList.objects.filter(recipe=recipe).delete()
-                TagInRecipe.objects.filter(recipe=recipe).delete()
-                self.get_ingredients_tags(ingredients, tags, recipe)
 
 
     def get_is_favorited(self, obj):
@@ -281,3 +130,112 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe=obj,
             user=request.user
         ).exists()
+
+
+class RecipeAddSerializers(serializers.ModelSerializer):
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=TagInRecipe.objects.all(),
+        many=True
+    )
+    ingredients = IngredientListSerializer(many=True)
+    image = HybridImageField()
+
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'tags',
+            'name',
+            'ingredients',
+            'image',
+            'text',
+            'cooking_time'
+        )
+
+
+    def to_representation(self, instance):
+        serializer = RecipeSerializer(instance)
+        return serializer.data
+
+
+    def validate(self, data):
+        ingredients = data['ingredients']
+        if not ingredients:
+            raise serializers.ValidationError(
+                'Ingredient must be added)'
+            )
+        unique_ingredients = []
+        for ingredient in ingredients:
+            name = ingredient['id']
+            if int(ingredient['amount']) <= 0:
+                raise serializers.ValidationError(
+                    'Is the quantity value exactly greater than 0?'
+                )
+            if not isinstance(ingredient['amount'], int):
+                raise serializers.ValidationError(
+                    'Ingredient quantity must be a number'
+                )
+            if name not in unique_ingredients:
+                unique_ingredients.append(name)
+            else:
+                raise serializers.ValidationError(
+                    'Ingredient should not be repeated))'
+                )
+        return data
+
+
+    def validate_cooking_time(self, data):
+        if data <= 0:
+            raise serializers.ValidationError(
+                'Cooking time must not be less than 1 minute'
+            )
+        return data
+
+
+    def tag_validate(self, tags):
+        if not tags:
+            raise serializers.ValidationError(
+                'Tag must be added)'
+            )
+        if len(tags) > len(set(tags)):
+            raise serializers.ValidationError(
+                'Tags shoud be unique)'
+            )
+        for tag_id in tags:
+            if not Tag.objects.filter(id=tag_id).exists():
+                raise serializers.ValidationError(
+                    'This tag doesnt exist yet{'
+                )
+    
+
+    def create_ingredients(self, ingredients, recipe):
+        for ingredient in ingredients:
+            amount = ingredient['amount']
+            ingredient = ingredient['id']
+            ingredients, IngredientList.objects.get_or_create(
+                recipe=recipe,
+                ingredient=ingredient,
+                amount=amount
+            )
+
+
+    @transaction.atomic
+    def create(self, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        recipe.save()
+        self.create_ingredients(ingredients, recipe)
+        return recipe
+
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        instance.ingredients.clear()
+        self.create_ingredients(ingredients, instance)
+        instance.tags.clear()
+        instance.tags.set(tags)
+        return super().update(instance, validated_data)
