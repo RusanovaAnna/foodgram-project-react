@@ -5,7 +5,6 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from users.models import User
 
 from .serializers import (FollowSerializer, MeSerializer,
@@ -18,17 +17,16 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
     pagination_class = UserPagination
 
-
-    @action(detail=False,
-            methods=['get', 'patch', ],
-            permission_classes=[IsAuthenticated,],
-            url_path='me',
-            serializer_class=MeSerializer
-        )
+    @action(
+        detail=False,
+        methods=['get', 'patch', ],
+        permission_classes=[IsAuthenticated, ],
+        url_path='me',
+        serializer_class=MeSerializer
+    )
     def me(self, pk=None):
         serializer = self.get_serializer(self.request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
     @action(
         methods=['get'],
@@ -46,7 +44,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = FollowSerializer(follows, many=True)
         return Response(serializer.data)
-
 
     @action(
         detail=False,
@@ -82,7 +79,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
     @action(
         methods=['POST'],
         detail=False,
@@ -105,4 +101,3 @@ class UserViewSet(viewsets.ModelViewSet):
             {'current_password': 'Wrong password entered'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    

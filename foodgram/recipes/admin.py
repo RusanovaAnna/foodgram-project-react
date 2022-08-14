@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin, display, site
-from django.utils.translation import gettext_lazy as _
 
 from .models import (FavoriteRecipe, Follow, Ingredient, IngredientList,
                      Recipe, Tag, TagInRecipe)
@@ -39,8 +38,8 @@ class TagInRecipeAdmin(admin.StackedInline):
 class RecipeAdmin(ModelAdmin):
     list_display = (
         'author', 'ingredients',
-        'tags','image','name',
-        'text','cooking_time',
+        'tags', 'image', 'name',
+        'text', 'cooking_time',
     )
     filter_horizontal = ('tags',)
     search_fields = ('author',)
@@ -54,14 +53,12 @@ class RecipeAdmin(ModelAdmin):
     ordering = ('author')
     inlines = [IngredientInRecipeAdmin, TagInRecipeAdmin]
 
-
     @display(description='tags')
     def get_tags(self, obj):
         get_tags = obj.list_tags()
         if get_tags:
             return list(get_tags)
         return None
-
 
     @display(description='added to favorites')
     def favorite(self, obj):

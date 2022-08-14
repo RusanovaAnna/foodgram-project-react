@@ -1,5 +1,4 @@
 from django_filters import rest_framework as filters
-
 from recipes.models import FavoriteRecipe, Recipe
 
 
@@ -20,18 +19,15 @@ class RecipeFavoriteFilter(filters.FilterSet):
         method='shopping_cart',
     )
 
-
     def get_is_favorited(self, queryset, value, name):
         if value and not self.request.user.is_anonymous:
             return queryset.filter(is_favorited__id=self.request.user.id)
         return queryset
 
-
     def get_is_in_shopping_cart(self, queryset, value, name):
         if value and not self.request.user.is_anonymous:
             return queryset.filter(is_in_shopping_cart__user=self.request.user)
         return queryset
-
 
     class Meta:
         model = FavoriteRecipe
@@ -45,7 +41,6 @@ class RecipeFilter(filters.FilterSet):
         field_name='name',
     )
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug',)
-
 
     class Meta:
         model = Recipe

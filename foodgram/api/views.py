@@ -27,10 +27,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.select_related(
         'author'
     ).prefetch_related('ingredients').all()
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly,]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly, ]
     serializer_class = RecipeSerializer
     filterset_class = RecipeFilter
-    
 
     def get_serializer_class(self):
         if self.action == 'favorite':
@@ -38,7 +37,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         elif self.action == 'shopping_cart':
             return ShopSerializer
         return self.serializer_class
-    
 
     @action(
         detail=True,
@@ -47,7 +45,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         serializer.save(author=user)
-    
 
     def add_recipe(self, model, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
@@ -58,7 +55,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = RecipeShortSerializer(recipe)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
-
     def delete_recipe(self, model, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = self.request.user
@@ -66,10 +62,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
     @action(
-        detail=True, 
-        methods=['POST', 'DELETE', 'GET'], 
+        detail=True,
+        methods=['POST', 'DELETE', 'GET'],
         permission_classes=[IsAuthenticated],
         url_name='favorite',
         filterset_class=RecipeFavoriteFilter,
@@ -79,7 +74,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return self.add_recipe(FavoriteRecipe, request, pk)
         else:
             return self.delete_recipe(FavoriteRecipe, request, pk)
-
 
     @action(
         detail=False,
@@ -93,7 +87,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return self.add_recipe(Shop, request, pk)
         else:
             return self.delete_recipe(Shop, request, pk)
-    
 
     @action(
         detail=False,
@@ -129,10 +122,9 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
-    
+
 
 class CustomTokenCreateView(TokenCreateView):
-
 
     def _action(self, serializer):
         response = super()._action(serializer)

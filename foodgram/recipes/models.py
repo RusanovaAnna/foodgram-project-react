@@ -5,7 +5,6 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from users.models import User
 
-
 MIN = 1
 
 
@@ -25,11 +24,9 @@ class Tag(models.Model):
         unique=True,
     )
 
-
     class Meta:
         verbose_name = _('Tag')
         verbose_name_plural = _('Tags')
-
 
     def __str__(self):
         return self.name
@@ -58,12 +55,10 @@ class UnitOfMeasurement(models.Model):
         unique=True,
     )
 
-
     class Meta:
         verbose_name = _('unit of measurement')
         verbose_name_plural = _('unit of measurement')
         ordering = ['metric', 'name']
-
 
     def __str__(self):
         return self.name
@@ -73,12 +68,11 @@ class Ingredient(models.Model):
     name = models.CharField(
         max_length=200,
         verbose_name='name',
-        )
+    )
     measurement_unit = models.CharField(
         'unit of measurement',
         max_length=200,
-        )
-
+    )
 
     class Meta:
         constraints = [
@@ -90,7 +84,6 @@ class Ingredient(models.Model):
         ordering = ('name',)
         verbose_name = 'ingredient'
         verbose_name_plural = 'ingredients'
-
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}'
@@ -117,7 +110,7 @@ class Recipe(models.Model):
     image = models.ImageField(
         upload_to='recipes/',
         verbose_name='image',
-        help_text='Select image to upload)', 
+        help_text='Select image to upload)',
     )
     name = models.CharField(
         max_length=200,
@@ -131,7 +124,6 @@ class Recipe(models.Model):
         verbose_name='cooking time',
     )
 
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -141,7 +133,6 @@ class Recipe(models.Model):
         ]
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
-
 
     def __str__(self):
         return self.name
@@ -156,7 +147,6 @@ class TagInRecipe(models.Model):
                                related_name='recipe_tag',
                                verbose_name='recipe')
 
-
     class Meta:
         verbose_name = 'tag in recipe'
         verbose_name_plural = 'tags in recipe'
@@ -166,7 +156,6 @@ class TagInRecipe(models.Model):
                 name='recipe_tag_unique'
             )
         ]
-
 
     def __str__(self):
         return f'Tag "{self.tag}" recipe "{self.recipe}".'
@@ -194,7 +183,6 @@ class FavoriteRecipe(models.Model):
         verbose_name='is in shopping cart',
     )
 
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -204,7 +192,6 @@ class FavoriteRecipe(models.Model):
         ]
         verbose_name = _('Favorites')
         verbose_name_plural = _('Favorites')
-
 
     def __str__(self):
         return f'{self.user.username} - {self.recipe.name}'
@@ -224,7 +211,6 @@ class Follow(models.Model):
         verbose_name='user',
     )
 
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -232,7 +218,6 @@ class Follow(models.Model):
                 name='unique_author_user_following',
             )
         ]
-
 
     def __str__(self):
         return f'{self.user} follow for {self.author}'
@@ -258,7 +243,6 @@ class IngredientList(models.Model):
         null=True,
     )
 
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -268,7 +252,6 @@ class IngredientList(models.Model):
         ]
         verbose_name = 'Ingredient amount'
         verbose_name_plural = 'Ingredient amounts'
-
 
     def __str__(self):
         return f'{self.recipe.name} - {self.ingredient.name}'
@@ -288,17 +271,15 @@ class Shop(models.Model):
         verbose_name='recipe'
     )
 
-
     class Meta:
         verbose_name = 'shop'
         verbose_name_plural = 'shops'
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'], 
+                fields=['user', 'recipe'],
                 name='shop_user_recipe_unique'
             )
         ]
-
 
     def __str__(self):
         return f'Recipe "{self.recipe}" in shoplist {self.user}'

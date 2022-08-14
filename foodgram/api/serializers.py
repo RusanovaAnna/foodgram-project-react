@@ -9,7 +9,6 @@ from users.serializers import UserSerializer
 
 class TagSerializer(serializers.ModelSerializer):
 
-
     class Meta:
         model = Tag
         fields = '__all__'
@@ -20,7 +19,6 @@ class IngredientSerializer(serializers.ModelSerializer):
     id = serializers.CharField()
     name = serializers.ReadOnlyField()
     measurement_unit = serializers.ReadOnlyField()
-
 
     class Meta:
         model = Ingredient
@@ -33,7 +31,6 @@ class TagInRecipeGetSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source='tag.name')
     color = serializers.ReadOnlyField(source='tag.color')
     slug = serializers.ReadOnlyField(source='tag.slug')
-
 
     class Meta:
         model = TagInRecipe
@@ -59,7 +56,6 @@ class IngredientListSerializer(serializers.HyperlinkedModelSerializer):
 class RecipeShortSerializer(serializers.ModelSerializer):
     image = HybridImageField()
 
-
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
@@ -70,11 +66,9 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
-
     class Meta:
         model = FavoriteRecipe
         fields = ('user', 'recipe')
-    
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -83,7 +77,6 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
 
 class ShopSerializer(FavoriteRecipeSerializer):
-
 
     class Meta(FavoriteRecipeSerializer.Meta):
         model = Shop
@@ -102,7 +95,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     cooking_time = serializers.IntegerField()
 
-
     class Meta:
         model = Recipe
         fields = (
@@ -111,16 +103,14 @@ class RecipeSerializer(serializers.ModelSerializer):
             'name', 'image', 'text', 'cooking_time',
         )
 
-
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         if not request or request.user.is_anonymous:
             return False
         return FavoriteRecipe.objects.filter(
-            recipe=obj, 
+            recipe=obj,
             user=request.user
         ).exists()
-
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
@@ -140,7 +130,6 @@ class RecipeAddSerializers(serializers.ModelSerializer):
     ingredients = IngredientListSerializer(many=True)
     image = HybridImageField()
 
-
     class Meta:
         model = Recipe
         fields = (
@@ -152,11 +141,9 @@ class RecipeAddSerializers(serializers.ModelSerializer):
             'cooking_time'
         )
 
-
     def to_representation(self, instance):
         serializer = RecipeSerializer(instance)
         return serializer.data
-
 
     def validate(self, data):
         ingredients = data['ingredients']
@@ -183,14 +170,12 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                 )
         return data
 
-
     def validate_cooking_time(self, data):
         if data <= 0:
             raise serializers.ValidationError(
                 'Cooking time must not be less than 1 minute'
             )
         return data
-
 
     def tag_validate(self, tags):
         if not tags:
@@ -206,7 +191,6 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'This tag doesnt exist yet{'
                 )
-    
 
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
@@ -218,7 +202,6 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                 amount=amount
             )
 
-
     @transaction.atomic
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
@@ -228,7 +211,6 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         recipe.save()
         self.create_ingredients(ingredients, recipe)
         return recipe
-
 
     @transaction.atomic
     def update(self, instance, validated_data):
