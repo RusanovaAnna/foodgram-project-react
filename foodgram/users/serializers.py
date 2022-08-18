@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError, transaction
 from recipes.models import Follow
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
