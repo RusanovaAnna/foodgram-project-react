@@ -1,5 +1,15 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.db.models import Q
+
+
+class CustomUserManager(UserManager):
+
+    def get_by_natural_key(self, username):
+        return self.get(
+            Q(**{self.model.USERNAME_FIELD: username}) |
+            Q(**{self.model.EMAIL_FIELD: username})
+        )
 
 
 class User(AbstractUser):
@@ -35,6 +45,7 @@ class User(AbstractUser):
         null=False,
         verbose_name='password',
     )
+    objects = CustomUserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
