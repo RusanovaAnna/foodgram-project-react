@@ -74,16 +74,21 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context.get('request').user
         recipe_id = data['recipe'].id
-        if (self.context.get('request').method == 'GET'
-                and FavoriteRecipe.objects.filter(user=user,
-                                            recipe__id=recipe_id).exists()):
+        if (
+            self.context.get('request').method == 'GET'
+            and FavoriteRecipe.objects.filter(user=user,
+            recipe__id=recipe_id).exists()
+        ):
             raise serializers.ValidationError(
                 'Recipe already added to favorites')
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        if (self.context.get('request').method == 'DELETE'
-                and not FavoriteRecipe.objects.filter(
-                    user=user,
-                    recipe=recipe).exists()):
+        if (
+            self.context.get('request').method == 'DELETE'
+            and not FavoriteRecipe.objects.filter(
+                user=user,
+                recipe=recipe
+            ).exists()
+        ):
             raise serializers.ValidationError()
         return data
 
