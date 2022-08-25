@@ -3,7 +3,7 @@ services:
   db:
     image: postgres:13.0-alpine
     volumes:
-      - /var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
   
@@ -43,5 +43,6 @@ services:
              gunicorn foodgram.wsgi:application --bind 0:8000"
 
 volumes:
+  postgres_data: 
   static_value:
   media_value:
