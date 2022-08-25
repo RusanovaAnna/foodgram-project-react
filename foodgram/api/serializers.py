@@ -3,6 +3,7 @@ from drf_extra_fields.fields import HybridImageField
 from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
                             Shop, Tag, TagInRecipe)
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 from users.models import User
 from users.serializers import UserSerializer
 
@@ -70,10 +71,28 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         model = FavoriteRecipe
         fields = ('user', 'recipe')
 
+    def validate(self, data):
+        user = self.context.get('request').user
+        recipe_id = data['recipe'].id
+        if (self.context.get('request').method == 'GET'
+                and FavoriteRecipe.objects.filter(user=user,
+                                            recipe__id=recipe_id).exists()):
+            raise serializers.ValidationError(
+                'Recipe already added to favorites')
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        if (self.context.get('request').method == 'DELETE'
+                and not FavoriteRecipe.objects.filter(
+                    user=user,
+                    recipe=recipe).exists()):
+            raise serializers.ValidationError()
+        return data
+
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}
-        return RecipeShortSerializer(instance.recipe, context=context).data
+        return RecipeShortSerializer(
+            instance.recipe, context=context
+        ).data
 
 
 class ShopSerializer(FavoriteRecipeSerializer):
@@ -129,6 +148,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
     )
     ingredients = IngredientListSerializer(many=True)
     image = HybridImageField()
+    cooking_time = serializers.IntegerField()
 
     class Meta:
         model = Recipe
