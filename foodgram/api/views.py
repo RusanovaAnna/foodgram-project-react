@@ -55,6 +55,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             raise ValidationError('Recipe already added')
         model.objects.create(recipe=recipe, user=user)
         serializer = RecipeShortSerializer(recipe)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_recipe(self, model, request, pk):
