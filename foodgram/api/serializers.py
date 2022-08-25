@@ -76,8 +76,10 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         recipe_id = data['recipe'].id
         if (
             self.context.get('request').method == 'GET'
-            and FavoriteRecipe.objects.filter(user=user,
-            recipe__id=recipe_id).exists()
+            and FavoriteRecipe.objects.filter(
+                user=user,
+                recipe__id=recipe_id
+            ).exists()
         ):
             raise serializers.ValidationError(
                 'Recipe already added to favorites')
