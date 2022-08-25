@@ -1,4 +1,3 @@
-from api.pagination import UserPagination
 from django.shortcuts import get_object_or_404
 from recipes.models import Follow
 from rest_framework import status, viewsets
@@ -15,7 +14,6 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
-    pagination_class = UserPagination
 
     @action(
         detail=False,

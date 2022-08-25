@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.validators import ValidationError
 
 from .filtres import IngredientFilter, RecipeFavoriteFilter, RecipeFilter
+from .pagination import RecipePagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeAddSerializers, RecipeSerializer,
@@ -30,6 +31,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly, ]
     serializer_class = RecipeSerializer
     filterset_class = RecipeFilter
+    pagination_class = RecipePagination
 
     def get_serializer_class(self):
         if self.action == 'favorite':
