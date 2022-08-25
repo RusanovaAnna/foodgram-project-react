@@ -141,15 +141,13 @@ class RecipeAddSerializers(serializers.ModelSerializer):
             'cooking_time'
         )
 
-   # def to_representation(self, instance):
-   #     serializer = RecipeSerializer(instance)
-   #     return serializer.data
     def to_representation(self, instance):
         return RecipeSerializer(
-            instance,
+            instance, 
             context={
                 'request': self.context.get('request')
-            }).data
+            }
+        ).data
 
     def validate(self, data):
         ingredients = data['ingredients']
@@ -227,4 +225,3 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         instance.tags.clear()
         instance.tags.set(tags)
         return super().update(instance, validated_data)
-    
