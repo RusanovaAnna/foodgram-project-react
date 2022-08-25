@@ -143,7 +143,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return RecipeSerializer(
-            instance, 
+            instance,
             context={
                 'request': self.context.get('request')
             }
