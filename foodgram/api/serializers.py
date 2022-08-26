@@ -224,10 +224,9 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                 )
 
     def get_ingredients(self, data):
-         if 'ingredients' in data['ingredients']:
+        if 'ingredients' in data['ingredients']:
             ing = self.context['request'].data['ingredients']
-        #ing = IngredientList.objects.filter(recipe=obj)
-            return IngredientListSerializer(ing, many=True).data
+        return IngredientListSerializer(ing, many=True).data
 
     @transaction.atomic
     def create(self, validated_data):

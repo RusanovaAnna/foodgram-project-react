@@ -1,27 +1,22 @@
-import csv
+from csv import reader
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db import IntegrityError
-from recipes.models import Ingredient
+
+from recipes.models import Ingredient 
 
 
 class Command(BaseCommand):
-    help = 'Loading data from csv files'
+    help = 'Load ingredients data from csv-file to DB.'
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **kwargs):
         with open(
-            f'{settings.BASE_DIR}/data/ingredients.csv',
-            # f'{settings.STATIC_ROOT}/data/ingredients.csv',
+            'recipes/data/ingredients.csv',
             'r',
-            encoding='utf-8'
-        ) as csv_file:
-            reader = csv.DictReader(csv_file)
-            try:
-                Ingredient.objects.bulk_create(
-                    Ingredient(**items) for items in reader
-                )
-            except IntegrityError:
-                return 'These ingredients already exist'
-        return (
-            f'{Ingredient.objects.count()} - ingredients loaded successfully')
+            encoding='UTF-8'
+        ) as ingredients:
+            for row in reader(ingredients):
+                if len(row) == 2:
+                    Ingredient.objects.get_or_create(
+                        name=row[0],
+                        measurement_unit=row[1],
+                    )

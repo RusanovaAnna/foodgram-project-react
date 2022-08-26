@@ -79,7 +79,7 @@ class FollowSerializer(serializers.ModelSerializer):
                 'You cant subscribe to yourself'
             )
         return data
-    
+
     def get_is_subscribed(self, obj):
         request = self.context['request']
         if request.user.pk == obj.user.id:
