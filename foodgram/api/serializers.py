@@ -223,15 +223,11 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                     'This tag doesnt exist yet{'
                 )
 
-    def create_ingredients(self, ingredients, recipe):
-        for ingredient in ingredients:
-            amount = ingredient['amount']
-            ingredient = ingredient['id']
-            ingredients, IngredientList.objects.get_or_create(
-                recipe=recipe,
-                ingredient=ingredient,
-                amount=amount
-            )
+    def get_ingredients(self, data):
+         if 'ingredients' in data['ingredients']:
+            ing = self.context['request'].data['ingredients']
+        #ing = IngredientList.objects.filter(recipe=obj)
+            return IngredientListSerializer(ing, many=True).data
 
     @transaction.atomic
     def create(self, validated_data):
@@ -240,7 +236,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         recipe.save()
-        self.create_ingredients(ingredients, recipe)
+        self.get_ingredients(ingredients, recipe)
         return recipe
 
     @transaction.atomic
@@ -248,7 +244,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         instance.ingredients.clear()
-        self.create_ingredients(ingredients, instance)
+        self.get_ingredients(ingredients, instance)
         instance.tags.clear()
         instance.tags.set(tags)
         return super().update(instance, validated_data)
