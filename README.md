@@ -48,17 +48,22 @@ docker-compose up -d
 
 #### 2. Сделать миграции:
 ```
-docker-compose exec web python manage.py migrate
+docker-compose exec backend python manage.py migrate
 ```
 
 #### 3. Создать суперпользователя:
 ```
-docker-compose exec web python manage.py createsuperuser
+docker-compose exec backend python manage.py createsuperuser
 ```
 
 #### 4. Собрать статику:
 ```
-docker-compose exec web python manage.py collectstatic --no-input
+docker-compose exec backend python manage.py collectstatic --no-input
 ```
 
-#### Примеры запросов
+#### 5. При необходимости наполните базу тестовыми данными из foodgram/recipes/data/:
+```
+docker-compose exec backend python manage.py ingredients_import
+```
+
+
