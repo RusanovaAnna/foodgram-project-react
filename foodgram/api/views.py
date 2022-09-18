@@ -10,7 +10,7 @@ from rest_framework.permissions import (IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework.validators import ValidationError
 
-from .filtres import IngredientFilter, RecipeFavoriteFilter, RecipeFilter
+from .filtres import IngredientFilter, RecipeFilter #RecipeFavoriteFilter,
 from .pagination import RecipePagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
@@ -70,8 +70,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True,
         methods=['POST', 'DELETE', 'GET'],
         permission_classes=[IsAuthenticated],
+        #url_path=r'(?P<pk>[\d]+)/favorite',
         url_name='favorite',
-        filterset_class=RecipeFavoriteFilter,
+        #filterset_class=RecipeFavoriteFilter,
     )
     def favorite(self, request, pk=None):
         if request.method == 'POST':

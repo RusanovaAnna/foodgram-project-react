@@ -46,7 +46,6 @@ class UserSerializer(serializers.ModelSerializer):
             'password',
         )
         extra_kwargs = {'password': {'write_only': True}}
-        read_only_fields = 'is_subscribed',
 
 
 class MeSerializer(serializers.ModelSerializer):
@@ -90,7 +89,7 @@ class FollowSerializer(serializers.ModelSerializer):
 class SetPasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(
         min_length=8,
-        max_length=100,
+        max_length=128,
         write_only=True,
     )
     current_password = serializers.CharField(write_only=True)

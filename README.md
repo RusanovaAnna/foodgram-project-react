@@ -66,4 +66,6 @@ docker-compose exec backend python manage.py collectstatic --no-input
 docker-compose exec backend python manage.py ingredients_import
 ```
 
+### Об авторе:
 
+Русанова Анна [GitHub профиль](https://github.com/RusanovaAnna)

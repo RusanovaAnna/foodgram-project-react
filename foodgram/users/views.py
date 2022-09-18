@@ -33,7 +33,7 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path='subscriptions',
         url_name='subscriptions',
     )
-    def subscriptions(self, request):
+    def subscription(self, request):
         user = request.user
         follows = Follow.objects.filter(user=user)
         page = self.paginate_queryset(follows)

@@ -230,20 +230,54 @@ class RecipeAddSerializers(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        image = validated_data.pop('image')
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.objects.create(
+            image=image,
+            **validated_data
+        )       
         recipe.tags.set(tags)
         recipe.save()
-        self.get_ingredients(ingredients, recipe)
+        recipe = self.get_ingredients(ingredients, recipe)
         return recipe
-
-    @transaction.atomic
+    
+    #@transaction.atomic
+    #def update(self, instance, validated_data):
+    #    if 'ingredients' in validated_data:
+    #        ingredients = validated_data.pop('ingredients')
+    #        instance.ingredients.clear()
+    #        self.get_ingredients(ingredients, instance)
+    #    if 'tags' in validated_data:
+    #        instance.tags.set(
+    #            validated_data.pop('tags'))
+    #    return super().update(
+    #        instance, validated_data
+    #    )
+    
     def update(self, instance, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
-        instance.ingredients.clear()
-        self.get_ingredients(ingredients, instance)
-        instance.tags.clear()
-        instance.tags.set(tags)
+        ingredients = validated_data.pop('ingredients', None)
+        if ingredients is not None:
+            instance.ingredients.clear()
+
+            create_ingredients = [
+                IngredientList(
+                    recipe=instance,
+                    ingredient=ingredient['ingredient'],
+                    amount=ingredient['amount']
+                )
+                for ingredient in ingredients
+            ]
+            IngredientList.objects.bulk_create(
+                create_ingredients
+            )
         return super().update(instance, validated_data)
+    #def update(self, instance, validated_data):
+    #    ingredients = validated_data.pop('ingredients')
+    #    tags = validated_data.pop('tags')
+    #    instance.ingredients.clear()
+    #    self.get_ingredients(ingredients, instance)
+    #    instance.tags.clear()
+    #    instance.tags.set(tags)
+    #    return super().update(instance, validated_data)
+
