@@ -21,7 +21,7 @@ class RecipeFavoriteFilter(filters.FilterSet):
 
     def get_is_favorited(self, queryset, value, name):
         if value and not self.request.user.is_anonymous:
-            return queryset.filter(is_favorited__id=self.request.user.id)
+            return queryset.filter(favorite__user=self.request.user) #new
         return queryset
 
     def get_is_in_shopping_cart(self, queryset, value, name):

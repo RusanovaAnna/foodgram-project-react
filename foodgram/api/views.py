@@ -1,17 +1,17 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import TokenCreateView
 from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.validators import ValidationError
 
-from .filtres import IngredientFilter, RecipeFilter #RecipeFavoriteFilter,
-from .pagination import RecipePagination
+from .filtres import IngredientFilter, RecipeFilter  # RecipeFavoriteFilter,
+from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeAddSerializers, RecipeSerializer,
@@ -22,16 +22,18 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
+    permission_classes = (AllowAny,)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.select_related(
         'author'
     ).prefetch_related('ingredients').all()
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly, ]
+    permission_classes = [IsAuthorOrReadOnly]
     serializer_class = RecipeSerializer
+    filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
-    pagination_class = RecipePagination
+    pagination_class = CustomPageNumberPagination
 
     def get_serializer_class(self):
         if self.action == 'favorite':
@@ -122,6 +124,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
+    permission_classes = (AllowAny,)
     filterset_class = IngredientFilter
     serializer_class = IngredientSerializer
     pagination_class = None
