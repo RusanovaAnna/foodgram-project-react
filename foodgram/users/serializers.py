@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
 #from rest_framework.validators import UniqueTogetherValidator
-from recipes.models import Follow, Recipe
+from recipes.models import  Recipe
 from rest_framework import serializers
 
-from .models import User
+from .models import Subscription, User
 
 User = get_user_model()
 
@@ -39,11 +39,9 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Follow.objects.filter(user=user, author=obj.id).exists() #new
-
+        user_id = self.context.get('request').user.id
+        return Subscription.objects.filter(
+            author=obj.id, user=user_id).exists()
 
 class MeSerializer(serializers.ModelSerializer):
 
@@ -54,35 +52,10 @@ class MeSerializer(serializers.ModelSerializer):
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для краткого отображения сведений о рецепте
-    """
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
 
-
-class FollowSerializer(UserSerializer):
-
-    recipes = serializers.SerializerMethodField(read_only=True)
-    recipes_count = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name',
-                  'is_subscribed', 'recipes', 'recipes_count')
-
-    @staticmethod
-    def get_recipes_count(obj):
-        return obj.recipes.count()
-
-    def get_recipes(self, obj):
-        request = self.context.get('request')
-        recipes = obj.recipes.all()
-        recipes_limit = request.query_params.get('recipes_limit')
-        if recipes_limit:
-            recipes = recipes[:int(recipes_limit)]
-        return RecipeShortSerializer(recipes, many=True).data
 
 
 class SetPasswordSerializer(serializers.Serializer):
@@ -92,3 +65,34 @@ class SetPasswordSerializer(serializers.Serializer):
         write_only=True,
     )
     current_password = serializers.CharField(write_only=True)
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.ReadOnlyField(source='author.recipes.count')
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Subscription
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'recipes_count'
+        )
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        return Subscription.objects.filter(
+            author=obj.author, user=user).exists()
+
+    def get_recipes(self, obj):
+        limit = self.context.get('request').GET.get('recipes_limit')
+        recipe_obj = obj.author.recipes.all()
+        if limit:
+            recipe_obj = recipe_obj[:int(limit)]
+        serializer = RecipeShortSerializer(recipe_obj, many=True)
+        return serializer.data

@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin, display, site
 
-from .models import (FavoriteRecipe, Follow, Ingredient, IngredientList,
+from .models import (FavoriteRecipe, Ingredient, IngredientList,
                      Recipe, Tag, TagInRecipe)
 
-site.register(Follow)
+
 site.register(Recipe)
 site.register(Tag)
 site.register(Ingredient)
