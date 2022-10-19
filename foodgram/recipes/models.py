@@ -108,13 +108,17 @@ class Recipe(models.Model):
 
 
 class TagInRecipe(models.Model):
-    tag = models.ForeignKey(Tag,
-                            on_delete=models.CASCADE,
-                            related_name='recipe_tag',
-                            verbose_name='tag')
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,
-                               related_name='recipe_tag',
-                               verbose_name='recipe')
+    tag = models.ForeignKey(
+        Tag,
+        on_delete=models.CASCADE,
+        related_name='recipe_tag',
+        verbose_name='tag'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE,
+        related_name='recipe_tag',
+        verbose_name='recipe'
+    )
 
     class Meta:
         verbose_name = 'tag in recipe'

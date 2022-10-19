@@ -1,17 +1,14 @@
-#from api.pagination import CustomPageNumberPagination
-#from recipes.models import Follow
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-#from rest_framework.views import APIView
 
-from users.models import User, Subscription
+from users.models import Subscription, User
 
-from .serializers import (MeSerializer, SubscriptionSerializer,
-                          SetPasswordSerializer, UserSerializer)
+from .serializers import (MeSerializer, SetPasswordSerializer,
+                          SubscriptionSerializer, UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -102,54 +99,3 @@ class UserViewSet(viewsets.ModelViewSet):
             {'current_password': 'Wrong password entered'},
             status=status.HTTP_400_BAD_REQUEST
         )
-
-#  @action(
-  #      methods=['get'],
-  #      detail=False,
-  #      permission_classes=[IsAuthenticated],
-  #      url_path='subscriptions',
-  #      url_name='subscriptions',
-  #  )
-   # def subscription(self, request):
-    #    user = request.user
-     #   follows = Follow.objects.filter(user=user)
-      #  page = self.paginate_queryset(follows)
-       # if page is not None:
-       #     serializer = FollowSerializer(page, many=True)
-       #     return self.get_paginated_response(serializer.data)
-       # serializer = FollowSerializer(follows, many=True)
-       # return Response(serializer.data)
-
-   # @action(
-   #     detail=False,
-   #     methods=['get', 'delete'],
-   #     permission_classes=[IsAuthenticated],
-   #     url_path=r'(?P<id>[\d]+)/subscribe',
-   #     url_name='subscribe',
-   #     pagination_class=None,
-   # )
-   # def subscribe(self, request, id):
-    #    user = request.user
-    #    author = get_object_or_404(User, id=id)
-    #    subscription = Follow.objects.filter(
-    #        user=user,
-    #        author=author
-    #    )
-    #    if (
-    #        request.method == 'GET'
-    #        and not subscription.exists()
-    #        and user != author
-    #    ):
-    #        Follow.objects.create(
-    #            user=user,
-    #            author=author
-    #        )
-    #        serializer = UserSerializer(
-    #            author,
-    #            context={'request': request}
-    #        )
-    #        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #    if request.method == 'DELETE' and subscription.exists():
-    #        subscription.delete()
-    #        return Response(status=status.HTTP_204_NO_CONTENT)
-     #   return Response(status=status.HTTP_400_BAD_REQUEST)
