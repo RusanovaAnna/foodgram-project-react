@@ -1,4 +1,3 @@
-from django.db import transaction
 from drf_extra_fields.fields import HybridImageField
 from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
                             Shop, Tag, TagInRecipe)
@@ -116,8 +115,8 @@ class ShopSerializer(FavoriteRecipeSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    ingredients = IngredientSerializer(
-        many=True, source='ingredient_list',
+    ingredients = IngredientListSerializer(
+        many=True, source='amount',
         read_only=True,
     )
     is_favorited = serializers.SerializerMethodField()
@@ -229,7 +228,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                 )
 
     def recipe_ingredient_create(ingredients_data, models, recipe):
-        bulk_create_data = (
+        data = (
             models(
                 recipe=recipe,
                 ingredient=ingredient_data['ingredient'],
@@ -237,7 +236,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
             )
             for ingredient_data in ingredients_data
         )
-        models.objects.bulk_create(bulk_create_data)
+        models.objects.bulk_create(data)
 
 
     def create(self, validated_data):
@@ -281,44 +280,4 @@ class RecipeAddSerializers(serializers.ModelSerializer):
             many=True
         ).data
         return representation
- #   @staticmethod
-  #  def create_ingredients(self, ingredients, recipe):
-   #     with transaction.atomic(): 
-    #        for ingredient in ingredients: 
-     #           amount = ingredient.get('amount') 
-      #          if not amount: 
-       #             amount = 0 
-        #        ingredient_amount = IngredientList.objects.create(
-         #           recipe=recipe, 
-          #          ingredient_id=ingredient.get('id'), 
-           #         amount=amount 
-            #    ) 
-             #   ingredient_amount.save() 
-
- #   @transaction.atomic
-  #  def create(self, validated_data):
-  #      author = self.context.get('request').user
-   #     ingredients = validated_data.pop('ingredients')
-  #      tags = validated_data.pop('tags')
-    #    recipe = Recipe.objects.create(
-    #        author=author,
-    #        **validated_data
-    #    )       
-    #    recipe.tags.set(tags)
-    #    recipe.save()
-    #    recipe = self.create_ingredients(ingredients, recipe)
-    #    return recipe
-    
-    #def to_representation(self, instance):
-    #    request = self.context.get('request')
-    #    context = {'request': request}
-    #    return RecipeSerializer(instance, context=context).data
-    
-   # def update(self, instance, validated_data):
-   #     ingredients = validated_data.pop('ingredients')
-   #     tags = validated_data.pop('tags')
-   #     instance.ingredients.clear()
-   #     self.create_ingredients(ingredients, instance)
-   #     instance.tags.clear()
-   #     instance.tags.set(tags)
-  #      return super().update(instance, validated_data)
+ 

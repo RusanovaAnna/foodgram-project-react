@@ -1,8 +1,8 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import IsAuthenticated
+
 from rest_framework.response import Response
 
 from users.models import Subscription, User
@@ -15,7 +15,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
-    permission_classes = [IsAuthenticatedOrReadOnly]
+   # permission_classes = [IsAuthenticatedOrReadOnly]
 
     @action(
         detail=False,
@@ -55,14 +55,14 @@ class UserViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, id=id)
         if user == author:
             return Response(
-                {'errors': 'На себя нельзя подписаться / отписаться'},
+                {'errors': 'You cant follow/unfollow yourself'},
                 status=status.HTTP_400_BAD_REQUEST)
         subscription = Subscription.objects.filter(
             author=author, user=user)
         if request.method == 'POST':
             if subscription.exists():
                 return Response(
-                    {'errors': 'Нельзя подписаться повторно'},
+                    {'errors': 'Cant subscribe again'},
                     status=status.HTTP_400_BAD_REQUEST)
             queryset = Subscription.objects.create(author=author, user=user)
             serializer = SubscriptionSerializer(
@@ -71,7 +71,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             if not subscription.exists():
                 return Response(
-                    {'errors': 'Нельзя отписаться повторно'},
+                    {'errors': 'Cant unsubscribe again'},
                     status=status.HTTP_400_BAD_REQUEST)
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

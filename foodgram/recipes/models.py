@@ -10,27 +10,27 @@ MIN = 1
 
 class Tag(models.Model):
     name = models.CharField(
-        max_length=200,
-        unique=True,
         verbose_name='name',
+        max_length=40,
+        unique=True,
+        null=False,
     )
     color = ColorField(
         unique=True,
         verbose_name='color',
     )
     slug = models.SlugField(
-        max_length=255,
         verbose_name='slug',
         unique=True,
     )
 
     class Meta:
+        ordering = ('-id',)
         verbose_name = _('Tag')
         verbose_name_plural = _('Tags')
 
     def __str__(self):
         return self.name
-
 
 
 class Ingredient(models.Model):
@@ -68,8 +68,8 @@ class Recipe(models.Model):
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='IngredientList',
         verbose_name='ingredients',
+        through='IngredientList',
     )
     tags = models.ManyToManyField(
         'Tag',
@@ -173,7 +173,7 @@ class FavoriteRecipe(models.Model):
 class IngredientList(models.Model):
     recipe = models.ForeignKey(
         'Recipe',
-        related_name='ingredient_list',
+        related_name='amount',
         on_delete=models.CASCADE,
         verbose_name='recipe',
     )
@@ -181,13 +181,13 @@ class IngredientList(models.Model):
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='ingredient',
-        related_name='ingredient_list',
+        related_name='amount',
         null=True
     )
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
         verbose_name='amount',
-        null=True,
+        null=True
     )
 
     class Meta:
