@@ -9,10 +9,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.validators import ValidationError
 
+from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag
 from .filtres import IngredientFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
-from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeAddSerializers, RecipeSerializer,
                           RecipeShortSerializer, ShopSerializer, TagSerializer)
@@ -34,7 +34,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     pagination_class = CustomPageNumberPagination
-    
+
     def get_queryset(self):
         is_favorited = self.request.query_params.get('is_favorited')
         if is_favorited is not None and int(is_favorited) == 1:
@@ -44,7 +44,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if is_in_shopping_cart is not None and int(is_in_shopping_cart) == 1:
             return Recipe.objects.filter(purchases__user=self.request.user)
         return Recipe.objects.all()
-    
+
     def get_serializer_class(self):
         if self.action == 'favorite':
             return FavoriteRecipeSerializer

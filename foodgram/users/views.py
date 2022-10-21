@@ -2,7 +2,6 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
-
 from rest_framework.response import Response
 
 from users.models import Subscription, User
@@ -15,7 +14,6 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
-   # permission_classes = [IsAuthenticatedOrReadOnly]
 
     @action(
         detail=False,
@@ -28,11 +26,10 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(self.request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
     @action(
-        detail=False, 
+        detail=False,
         url_path='subscriptions',
-        url_name='subscriptions', 
+        url_name='subscriptions',
         permission_classes=[IsAuthenticated]
     )
     def subscriptions(self, request):

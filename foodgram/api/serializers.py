@@ -106,7 +106,7 @@ class ShopSerializer(FavoriteRecipeSerializer):
 
     class Meta(FavoriteRecipeSerializer.Meta):
         model = Shop
-    
+
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}
@@ -136,7 +136,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
-    
+
     def get_ingredients(self, obj):
         queryset = IngredientList.objects.filter(recipe=obj)
         return IngredientListSerializer(queryset, many=True).data
@@ -227,7 +227,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                     'This tag doesnt exist yet{'
                 )
 
-    def recipe_ingredient_create(ingredients_data, models, recipe):
+    def recipe_ingredient_create(self, ingredients_data, models, recipe):
         data = (
             models(
                 recipe=recipe,
@@ -238,15 +238,14 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         )
         models.objects.bulk_create(data)
 
-
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags_data)
         self.recipe_ingredient_create(
-            ingredients_data, 
-            IngredientList, 
+            ingredients_data,
+            IngredientList,
             recipe
         )
         return recipe
@@ -261,7 +260,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                 recipe__id=instance.id)
             amount_set.delete()
             self.recipe_ingredient_create(
-                ingredients_data, 
+                ingredients_data,
                 IngredientList,
                 instance
             )
@@ -272,12 +271,11 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         self.fields.pop('tags')
         representation = super().to_representation(instance)
         representation['ingredients'] = IngredientListSerializer(
-            IngredientList.objects.filter(recipe=instance), 
+            IngredientList.objects.filter(recipe=instance),
             many=True
         ).data
         representation['tags'] = TagSerializer(
-            instance.tags, 
+            instance.tags,
             many=True
         ).data
         return representation
- 

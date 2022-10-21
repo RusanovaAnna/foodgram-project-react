@@ -17,6 +17,7 @@ class UserAdmin(ModelAdmin):
     list_filter = ('username', 'email', 'first_name',)
     empty_value_display = '-'
 
+
 class SubscriptionAdmin(ModelAdmin):
     list_display = (
         'id',
