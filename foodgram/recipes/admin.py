@@ -1,13 +1,14 @@
 from django.contrib import admin
-from django.contrib.admin import ModelAdmin, display, site
+from django.contrib.admin import ModelAdmin, display
 
-from .models import (FavoriteRecipe, Ingredient, 
-                     IngredientList, Recipe, Tag, TagInRecipe)
 
-site.register(Recipe)
-site.register(Tag)
-site.register(Ingredient)
-site.register(FavoriteRecipe)
+from .models import (FavoriteRecipe, Ingredient, IngredientList, Recipe, Tag,
+                     TagInRecipe)
+
+admin.site.register(Recipe)
+admin.site.register(Tag)
+admin.site.register(Ingredient)
+admin.site.register(FavoriteRecipe)
 
 
 class TagAdmin(ModelAdmin):

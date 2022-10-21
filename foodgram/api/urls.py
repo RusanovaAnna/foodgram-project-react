@@ -1,7 +1,6 @@
 from django.urls import include, path
 from dotenv import load_dotenv
 from rest_framework import routers
-
 from users.views import UserViewSet
 
 from .views import IngredientsViewSet, RecipeViewSet, TagViewSet
