@@ -3,7 +3,6 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from users.models import Subscription, User
 
 from .serializers import (MeSerializer, SetPasswordSerializer,
