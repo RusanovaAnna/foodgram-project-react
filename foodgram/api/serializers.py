@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 from users.models import User
 from users.serializers import UserSerializer
-
+from django.db.models import F
 
 class TagSerializer(serializers.ModelSerializer):
 
@@ -91,7 +91,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
                 recipe=recipe
             ).exists()
         ):
-            raise serializers.ValidationError()
+            raise serializers.ValidationError('Recipe was not in favorites')
         return data
 
     def to_representation(self, instance):
@@ -136,10 +136,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
-
-    def get_ingredients(self, obj):
-        queryset = IngredientList.objects.filter(recipe=obj)
-        return IngredientListSerializer(queryset, many=True).data
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
