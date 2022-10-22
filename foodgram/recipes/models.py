@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
 from users.models import User
 
 MIN = 1
@@ -39,7 +40,7 @@ class Ingredient(models.Model):
         verbose_name='name',
     )
     measurement_unit = models.CharField(
-        'unit of measurement',
+        'measurement_unit',
         max_length=200,
     )
 

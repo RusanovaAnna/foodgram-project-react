@@ -1,8 +1,9 @@
 from drf_extra_fields.fields import HybridImageField
-from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
-                            Shop, Tag, TagInRecipe)
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
+
+from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
+                            Shop, Tag, TagInRecipe)
 from users.models import User
 from users.serializers import UserSerializer
 
@@ -16,14 +17,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    id = serializers.CharField()
-    name = serializers.ReadOnlyField()
-    measurement_unit = serializers.ReadOnlyField()
-
     class Meta:
         model = Ingredient
-        fields = '__all__'
-        read_only_fields = '__all__',
+        fields = ('id', 'name', 'measurement_unit')
 
 
 class TagInRecipeGetSerializer(serializers.ModelSerializer):
@@ -37,7 +33,7 @@ class TagInRecipeGetSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'color', 'slug')
 
 
-class IngredientListSerializer(serializers.HyperlinkedModelSerializer):
+class IngredientRecipeGetSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -46,12 +42,20 @@ class IngredientListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = IngredientList
-        fields = [
-            'id',
-            'name',
-            'measurement_unit',
-            'amount',
-        ]
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+
+
+class IngredientListSerializer(serializers.ModelSerializer):
+    recipe = serializers.PrimaryKeyRelatedField(read_only=True)
+    amount = serializers.IntegerField(write_only=True)
+    id = serializers.PrimaryKeyRelatedField(
+        source='ingredient',
+        queryset=Ingredient.objects.all()
+    )
+
+    class Meta:
+        model = IngredientList
+        fields = ('id', 'amount', 'recipe')
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -115,7 +119,7 @@ class ShopSerializer(FavoriteRecipeSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    ingredients = IngredientListSerializer(
+    ingredients = IngredientRecipeGetSerializer(
         many=True, source='amount',
         read_only=True,
     )
@@ -266,7 +270,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         self.fields.pop('ingredients')
         self.fields.pop('tags')
         representation = super().to_representation(instance)
-        representation['ingredients'] = IngredientListSerializer(
+        representation['ingredients'] = IngredientRecipeGetSerializer(
             IngredientList.objects.filter(recipe=instance),
             many=True
         ).data
