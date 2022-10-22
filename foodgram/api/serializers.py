@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 from users.models import User
 from users.serializers import UserSerializer
-from django.db.models import F
+
 
 class TagSerializer(serializers.ModelSerializer):
 
