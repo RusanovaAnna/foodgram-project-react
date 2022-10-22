@@ -63,7 +63,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = self.request.user
         if model.objects.filter(recipe=recipe, user=user).exists():
-            raise Response('Recipe already added')
+            return Response(
+                {'errors': 'Recipe already added'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         model.objects.create(recipe=recipe, user=user)
         serializer = RecipeShortSerializer(recipe)
         serializer.is_valid(raise_exception=True)
