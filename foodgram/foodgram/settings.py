@@ -1,4 +1,5 @@
 import os
+from pickle import FALSE
 
 from dotenv import load_dotenv
 
@@ -8,7 +9,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-sh7=a^i3e^e1bi#n=soaee-^zr1)6jb1i%b4vw#zg+s5_vr@x@')
 
-DEBUG = True
+DEBUG = FALSE
 
 ALLOWED_HOSTS = ['*']
 
@@ -103,7 +104,7 @@ STATIC_URL = '/static_backend/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_backend')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 AUTH_USER_MODEL = 'users.User'
 
