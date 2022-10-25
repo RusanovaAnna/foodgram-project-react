@@ -59,6 +59,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
+            cd foodgram/infra/
             sudo docker-compose stop
             sudo docker system prune -f
             touch .env
