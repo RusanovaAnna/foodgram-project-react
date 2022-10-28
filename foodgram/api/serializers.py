@@ -1,8 +1,9 @@
 from drf_extra_fields.fields import HybridImageField
-from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
-                            Shop, Tag, TagInRecipe)
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
+
+from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
+                            Shop, Tag, TagInRecipe)
 from users.models import User
 from users.serializers import UserSerializer
 
@@ -122,6 +123,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True, source='amount',
         read_only=True,
     )
+   # ingredients = IngredientListSerializer(many=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = HybridImageField()
@@ -160,10 +162,15 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeAddSerializers(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(
-        queryset=TagInRecipe.objects.all(),
-        many=True
-    )
+   # tags = serializers.PrimaryKeyRelatedField(
+   #     queryset=TagInRecipe.objects.all(),
+   #     many=True
+   # )
+    tags = TagInRecipeGetSerializer(
+        read_only=True,
+        many=True,
+        source='recipe_tag'
+    ) 
     ingredients = IngredientListSerializer(many=True)
     image = HybridImageField()
     cooking_time = serializers.IntegerField()
@@ -244,8 +251,9 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         recipe.tags.set(tags_data)
         self.recipe_ingredient_create(
             ingredients_data,
-            IngredientList,
-            recipe
+           # IngredientList,
+            recipe,
+            tags_data,
         )
         return recipe
 

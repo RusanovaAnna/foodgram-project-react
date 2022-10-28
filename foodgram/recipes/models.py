@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
 from users.models import User
 
 MIN = 1
@@ -77,7 +78,7 @@ class Recipe(models.Model):
         verbose_name='tags',
     )
     image = models.ImageField(
-        upload_to='recipes/',
+        upload_to='media/',
         verbose_name='image',
         help_text='Select image to upload)',
     )
