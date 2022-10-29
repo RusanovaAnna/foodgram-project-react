@@ -251,7 +251,6 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         recipe.tags.set(tags_data)
         self.recipe_ingredient_create(
             ingredients_data,
-           # IngredientList,
             recipe,
             tags_data,
         )

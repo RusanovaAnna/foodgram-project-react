@@ -1,11 +1,13 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin, register
 
+from .forms import CustomUserCreationForm
 from .models import Subscription, User
 
 
 @register(User)
 class UserAdmin(ModelAdmin):
+    add_form = CustomUserCreationForm
     list_display = (
         'username',
         'email',

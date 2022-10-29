@@ -118,7 +118,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredients__name',
             'ingredients__measurement_unit',
         ).annotate(
-            amount_sum=Sum('ingredient_list__amount')
+            amount_sum=Sum('amount__amount')
         )
         text = 'Список покупок для вас: \n'
         for ingredient in queryset:
