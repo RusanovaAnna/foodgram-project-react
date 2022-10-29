@@ -34,12 +34,11 @@ class TagInRecipeGetSerializer(serializers.ModelSerializer):
 
 
 class IngredientRecipeGetSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source='ingredient.id')
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
+    id = serializers.IntegerField(source='ingredient.id')
+    name = serializers.CharField(source='ingredient.name')
+    measurement_unit = serializers.StringRelatedField(
         source='ingredient.measurement_unit'
     )
-
     class Meta:
         model = IngredientList
         fields = ('id', 'name', 'measurement_unit', 'amount')
@@ -267,6 +266,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
             amount_set.delete()
             self.recipe_ingredient_create(
                 ingredients_data,
+                tags_data,
                 IngredientList,
                 instance
             )
