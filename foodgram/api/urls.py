@@ -1,10 +1,10 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 from djoser.views import TokenDestroyView 
 from dotenv import load_dotenv
 from rest_framework import routers
 
 from users.views import UserViewSet
-from .views import CustomTokenCreateView, IngredientsViewSet, RecipeViewSet, TagViewSet
+from .views import IngredientsViewSet, RecipeViewSet, TagViewSet
 
 load_dotenv()
 
@@ -23,10 +23,9 @@ router_v1.register(
     basename='ingredients'
 )
 
-
 urlpatterns = [
-    path('', include(router_v1.urls)),
+    path('auth/', include('djoser.urls.authtoken')),
     path('', include('djoser.urls')),
-    path('auth/token/login/', CustomTokenCreateView.as_view(), name='login'),
-    path('auth/token/logout/', TokenDestroyView.as_view(), name='logout'),
+   # re_path(r'^auth/', include('djoser.urls.authtoken')),
+    path('', include(router_v1.urls)),
 ]

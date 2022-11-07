@@ -2,7 +2,6 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import TokenCreateView
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -140,11 +139,3 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
-
-
-class CustomTokenCreateView(TokenCreateView): 
-
-    def _action(self, serializer):
-        response = super()._action(serializer)
-        response.status_code = status.HTTP_201_CREATED
-        return response 

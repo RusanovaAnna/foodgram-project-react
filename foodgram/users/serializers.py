@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from djoser.serializers import UserCreateSerializer
+#from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
@@ -8,12 +8,35 @@ from .models import Subscription, User
 User = get_user_model()
 
 
+class UserCreateSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'password')
+        extra_kwargs = {'password': {'write_only': True}}
+    
+    #def create(self, validated_data):
+    #    user = User.objects.create_user(**validated_data)
+    #    return user
+    def create(self, validated_data):
+        user = User.objects.create(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return
+
+
 class UserSerializer(serializers.ModelSerializer):
 
     is_subscribed = serializers.SerializerMethodField(
         read_only=True
     )
-    password = serializers.CharField(write_only=True)
+   # password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
@@ -24,22 +47,13 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'is_subscribed',
-            'password',
+           # 'password',
         )
-        extra_kwargs = {'password': {'write_only': True}}
 
     def get_is_subscribed(self, obj):
         user_id = self.context.get('request').user.id
         return Subscription.objects.filter(
             author=obj.id, user=user_id).exists()
-
-
-class UserRegistrationSerializer(UserCreateSerializer):
-    
-    class Meta(UserCreateSerializer.Meta):
-        model = User
-        fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'password')
 
 
 class MeSerializer(serializers.ModelSerializer):

@@ -10,6 +10,18 @@ class CustomUserManager(UserManager):
             Q(**{self.model.USERNAME_FIELD: username}),
             Q(**{self.model.EMAIL_FIELD: username}),
         )
+   # def create_user(self, first_name, last_name,
+   #                 email, password):
+   #     if not email:
+   #         raise ValueError("Укажите email!")
+   #     email = self.normalize_email(email)
+   #     user = self.model(
+   #         email=email, first_name=first_name,
+   #         last_name=last_name,
+   #     )
+   #     user.set_password(password)
+    #    user.save()
+    #    return user
 
 
 class User(AbstractUser):

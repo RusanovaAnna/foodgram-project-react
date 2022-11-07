@@ -71,11 +71,13 @@ class Recipe(models.Model):
         Ingredient,
         verbose_name='ingredients',
         through='IngredientList',
+        related_name='recipes', #new
     )
     tags = models.ManyToManyField(
         'Tag',
         through='TagInRecipe',
         verbose_name='tags',
+        related_name='recipes', #new
     )
     image = models.ImageField(
         upload_to='media/',

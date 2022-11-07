@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from users.models import Subscription, User
 from .serializers import (MeSerializer, SetPasswordSerializer,
-                          SubscriptionSerializer, UserSerializer)
+                          SubscriptionSerializer, UserCreateSerializer, UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
