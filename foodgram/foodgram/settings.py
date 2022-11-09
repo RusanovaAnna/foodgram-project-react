@@ -122,16 +122,16 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 6
 }
 
-DJOSER = {
-    'LOGIN_FIELD': 'email',
-    'USER_ID_FIELD': 'id',
-    'HIDE_USERS': False,
-    'PERMISSIONS': {
-        'user': ['rest_framework.permissions.IsAuthenticated'],
-        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
-    },
-    "HIDE_USERS": False
-} 
+#DJOSER = {
+#    'LOGIN_FIELD': 'email',
+#    'USER_ID_FIELD': 'id',
+#    'HIDE_USERS': False,
+#    'PERMISSIONS': {
+#        'user': ['rest_framework.permissions.IsAuthenticated'],
+#        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+#    },
+#    "HIDE_USERS": False
+#} 
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'

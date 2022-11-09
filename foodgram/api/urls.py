@@ -1,5 +1,5 @@
 from django.urls import include, path, re_path
-from djoser.views import TokenDestroyView 
+#from djoser.views import TokenDestroyView #TokenCreateView
 from dotenv import load_dotenv
 from rest_framework import routers
 
@@ -24,8 +24,13 @@ router_v1.register(
 )
 
 urlpatterns = [
-    path('auth/', include('djoser.urls.authtoken')),
+   # path('auth/', include('djoser.urls.authtoken')),
+    re_path(r'^auth/', include('djoser.urls.authtoken')),
     path('', include('djoser.urls')),
-   # re_path(r'^auth/', include('djoser.urls.authtoken')),
+   # path('auth/token/login/', CustomTokenCreateView.as_view(), name='login'),
+   # path('token/login/', TokenCreateView.as_view()),
+   # path('auth/token/login/', TokenCreateView.as_view(), name='login'),
     path('', include(router_v1.urls)),
+   # path('token/logout/', TokenDestroyView.as_view()),
+   # path('auth/token/logout/', TokenDestroyView.as_view(), name='logout'),
 ]
