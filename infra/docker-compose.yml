@@ -9,12 +9,12 @@ services:
     restart: always
   
   frontend:
-    image: annarulunat/frontend_foodgram:latest
+    image: annarulunat/foodgram_frontend_1:latest
     volumes:
       - ../frontend/:/app/result_build/
   
   backend:
-    image: annarulunat/foodgram_backend_2:latest
+    image: annarulunat/foodgram_backend_4:latest
     restart: always
     volumes:
       - static_value:/app/static_backend/
