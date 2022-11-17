@@ -46,14 +46,6 @@ class UserRegistrationSerializer(UserCreateSerializer):
         return user
 
 
-class MeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ('username', 'email',
-                  'first_name', 'last_name',)
-
-
 class RecipeShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe

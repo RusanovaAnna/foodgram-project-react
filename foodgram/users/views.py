@@ -5,11 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from users.models import Subscription, User
-from .serializers import (MeSerializer, SetPasswordSerializer,
-                          SubscriptionSerializer, UserCreateSerializer, UserSerializer)
+from .serializers import (SetPasswordSerializer,
+                          SubscriptionSerializer, UserSerializer)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
@@ -19,7 +19,6 @@ class UserViewSet(viewsets.ModelViewSet):
         methods=['GET', 'PATCH', ],
         permission_classes=[IsAuthenticated, ],
         url_path='me',
-        serializer_class=MeSerializer
     )
     def me(self, pk=None):
         serializer = self.get_serializer(self.request.user)
@@ -36,7 +35,10 @@ class UserViewSet(viewsets.ModelViewSet):
         queryset = user.follower.all()
         pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
-            pages, many=True, context={'request': request})
+            pages,
+            many=True,
+            context={'request': request}
+        )
         return self.get_paginated_response(serializer.data)
 
     @action(
@@ -52,23 +54,31 @@ class UserViewSet(viewsets.ModelViewSet):
         if user == author:
             return Response(
                 {'errors': 'You cant follow/unfollow yourself'},
-                status=status.HTTP_400_BAD_REQUEST)
+                status=status.HTTP_400_BAD_REQUEST
+            )
         subscription = Subscription.objects.filter(
-            author=author, user=user)
+            author=author,
+            user=user
+        )
         if request.method == 'POST':
             if subscription.exists():
                 return Response(
                     {'errors': 'Cant subscribe again'},
-                    status=status.HTTP_400_BAD_REQUEST)
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             queryset = Subscription.objects.create(author=author, user=user)
             serializer = SubscriptionSerializer(
                 queryset, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
         if request.method == 'DELETE':
             if not subscription.exists():
                 return Response(
                     {'errors': 'Cant unsubscribe again'},
-                    status=status.HTTP_400_BAD_REQUEST)
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
