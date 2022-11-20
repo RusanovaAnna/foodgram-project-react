@@ -6,13 +6,14 @@ from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+#from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag
+from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag, IngredientList
 from .filtres import IngredientFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
-                          RecipeAddSerializers, RecipeSerializer,
+                          RecipeAddSerializer, RecipeSerializer,
                           RecipeShortSerializer, ShopSerializer, TagSerializer)
 
 
@@ -52,7 +53,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        serializer_class=RecipeAddSerializers,
+        serializer_class=RecipeAddSerializer,
     )
     def perform_create(self, serializer):
         user = self.request.user
@@ -128,7 +129,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
         response = HttpResponse(text, 'Content-Type: application/txt')
         response['Content-Disposition'] = 'attachment; filename="yourwishlist"'
-        return response
+        return response 
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -138,4 +139,4 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     pagination_class = None
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('name', )
+    search_fields = ('^name', )

@@ -159,7 +159,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                                              many=True).data
 
 
-class RecipeAddSerializers(serializers.ModelSerializer):
+class RecipeAddSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         queryset=TagInRecipe.objects.all(),
         many=True
@@ -233,16 +233,21 @@ class RecipeAddSerializers(serializers.ModelSerializer):
                     'This tag doesnt exist yet{'
                 )
 
-    def recipe_ingredient_create(self, ingredients_data, models, recipe):
-        data = (
-            models(
-                recipe=recipe,
-                ingredient=ingredient_data['ingredient'],
-                amount=ingredient_data['amount']
-            )
-            for ingredient_data in ingredients_data
+    def recipe_ingredient_create(self, ingredients_data, recipe):
+       # for ingredient in ingredients_data:
+       #     IngredientList.objects.create(
+       #         ingredient=ingredient.get('ingredient'),
+       #         amount=ingredient.get('amount'),
+       #         recipe=recipe
+       #     )
+        recipe.ingredients.set(
+            IngredientList.objects.bulk_create([
+                IngredientList(
+                ingredient=ingredient.get('ingredient'),
+                amount=ingredient.get('amount'),
+            ) for ingredient in ingredients_data
+            ])
         )
-        models.objects.bulk_create(data)
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
@@ -251,7 +256,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
         recipe.tags.set(tags_data)
         self.recipe_ingredient_create(
             ingredients_data,
-            IngredientList,
+           # IngredientList,
             recipe,
         )
         return recipe
@@ -267,7 +272,7 @@ class RecipeAddSerializers(serializers.ModelSerializer):
             amount_set.delete()
             self.recipe_ingredient_create(
                 ingredients_data,
-                IngredientList,
+            #    IngredientList,
                 instance
             )
         return super().update(instance, validated_data)
