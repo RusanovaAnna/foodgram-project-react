@@ -9,7 +9,7 @@ from rest_framework.response import Response
 #from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag, IngredientList
-from .filtres import IngredientFilter, RecipeFilter
+from .filtres import IngredientSearchFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
@@ -135,8 +135,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     permission_classes = (AllowAny,)
-    filterset_class = IngredientFilter
+    #filterset_class = IngredientFilter
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('^name', )
+   # filter_backends = (filters.SearchFilter,)
+    filter_backends = [IngredientSearchFilter]
+    search_fields = ('^name',)
