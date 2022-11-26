@@ -14,7 +14,6 @@ class Tag(models.Model):
         verbose_name='name',
         max_length=40,
         unique=True,
-        null=False,
     )
     color = ColorField(
         unique=True,
@@ -26,7 +25,6 @@ class Tag(models.Model):
     )
 
     class Meta:
-        ordering = ('-id',)
         verbose_name = _('Tag')
         verbose_name_plural = _('Tags')
 
@@ -51,7 +49,7 @@ class Ingredient(models.Model):
                 name='name_unit_unique'
             )
         ]
-        ordering = ('name',)
+        ordering = ['name']
         verbose_name = 'ingredient'
         verbose_name_plural = 'ingredients'
 
@@ -65,17 +63,18 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='author',
-        null=True,
     )
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='ingredients',
         through='IngredientList',
+        related_name='recipes',
     )
     tags = models.ManyToManyField(
         'Tag',
         through='TagInRecipe',
         verbose_name='tags',
+        related_name='recipes',
     )
     image = models.ImageField(
         upload_to='media/',
@@ -183,12 +182,10 @@ class IngredientList(models.Model):
         on_delete=models.CASCADE,
         verbose_name='ingredient',
         related_name='amount',
-        null=True
     )
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
         verbose_name='amount',
-        null=True
     )
 
     class Meta:
