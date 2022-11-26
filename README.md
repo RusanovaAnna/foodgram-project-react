@@ -5,9 +5,7 @@ Superuser:
 friend@gmail.com
 77FriG587
 
-http://51.250.105.232
-
-foodgramlunatanna.ddns.net
+http://51.250.17.212
 
 
 Дипломный проект foodgram-project-react
