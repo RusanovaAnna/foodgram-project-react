@@ -106,7 +106,7 @@ class RecipeAddSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'author', 'ingredients', 'tags', 'image',
             'name', 'text', 'cooking_time')
-
+    
     def validate(self, data):
         ingredients = data['ingredients']
         ingredients_list = []
