@@ -9,15 +9,6 @@ User = get_user_model()
 
 class IngredientSearchFilter(SearchFilter):
     search_param = 'name'
-#class IngredientFilter(django_filters.FilterSet):
-#    name = django_filters.CharFilter(
-#        field_name='name',
-#        lookup_expr='starts_with'
-#    )
-
-#    class Meta:
-#        model = Ingredient
-#        fields = ('name', 'measurement_unit')
 
 
 class RecipeFilter(django_filters.FilterSet):

@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin, display
 
-from .models import (FavoriteRecipe, Ingredient, IngredientList, Recipe, Tag,
-                     TagInRecipe)
+from .models import (FavoriteRecipe, Ingredient, IngredientList, Recipe, Tag, TagInRecipe)
 
 admin.site.register(Recipe)
 admin.site.register(Tag)
@@ -69,7 +68,6 @@ class IngredientInRAdmin(admin.ModelAdmin):
     list_display = ('id', 'recipe', 'ingredient', 'amount')
     list_filter = ('recipe__name',)
     search_fields = ('recipe__name',)
-
 
 @admin.register(TagInRecipe)
 class TagInRAdmin(admin.ModelAdmin):

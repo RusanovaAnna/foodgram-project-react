@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
     'users.apps.UsersConfig',
+    'debug_toolbar'
 ]
 
 MIDDLEWARE = [

@@ -2,13 +2,12 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-#from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag, IngredientList
+from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag #, IngredientList
 from .filtres import IngredientSearchFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
@@ -54,6 +53,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         serializer_class=RecipeAddSerializer,
+        permission_classes=[IsAuthenticated],
     )
     def perform_create(self, serializer):
         user = self.request.user
