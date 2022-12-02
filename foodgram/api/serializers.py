@@ -1,3 +1,4 @@
+from django.db import transaction
 from drf_extra_fields.fields import HybridImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
@@ -242,10 +243,13 @@ class RecipeAddSerializer(serializers.ModelSerializer):
             )
 
     def create(self, validated_data):
-        ingredients_data = validated_data.pop('ingredients')
-        tags_data = validated_data.pop('tags')
+        if 'ingredients' in validated_data:
+            ingredients_data = validated_data.pop('ingredients')
+        if 'tag' in validated_data:
+            tags_data = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags_data)
+        recipe.tags.add(*tags_data) 
+      #  recipe.tags.set(tags_data)
       #  IngredientList.objects.bulk_create(
         self.recipe_ingredient_create(
             ingredients_data,
@@ -253,11 +257,12 @@ class RecipeAddSerializer(serializers.ModelSerializer):
         )
        # )
         return recipe
-
+    
+    @transaction.atomic 
     def update(self, instance, validated_data):
         if 'tags' in self.validated_data:
             tags_data = validated_data.pop('tags')
-            instance.tags.set(tags_data)
+            instance.tags.add(*tags_data) #new
         if 'ingredients' in self.validated_data:
             ingredients_data = validated_data.pop('ingredients')
             amount_set = IngredientList.objects.filter(
