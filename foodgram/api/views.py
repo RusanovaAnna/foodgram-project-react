@@ -27,6 +27,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.select_related(
         'author'
     ).prefetch_related('ingredients').all()
+   # queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrReadOnly]
     serializer_class = RecipeSerializer
     filter_backends = [DjangoFilterBackend]
@@ -54,6 +55,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True,
         serializer_class=RecipeAddSerializer,
         permission_classes=[IsAuthenticated],
+        methods=['POST',]
+     #   url_name='recipes',
     )
     def perform_create(self, serializer):
         user = self.request.user
@@ -82,6 +85,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
+    #    serializer_class=FavoriteRecipeSerializer,
         methods=['POST', 'DELETE', 'GET'],
         permission_classes=[IsAuthenticated],
         url_name='favorite',
@@ -94,6 +98,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
+    #    serializer_class=ShopSerializer,
         methods=['POST', 'DELETE', 'GET'],
         permission_classes=[IsAuthenticated],
         url_path=r'(?P<pk>[\d]+)/shopping_cart',
