@@ -175,12 +175,8 @@ class RecipeAddSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         many=True
     )
-    author = UserSerializer(read_only=True)
+  #  author = UserSerializer(read_only=True)
     ingredients = IngredientListSerializer(many=True)
-   # ingredients = IngredientRecipeGetSerializer(
-   #     source='amount',
-   #     many=True
-   # )
     image = HybridImageField()
     cooking_time = serializers.IntegerField()
 
