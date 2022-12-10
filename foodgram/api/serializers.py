@@ -42,10 +42,10 @@ class IngredientListSerializer(serializers.ModelSerializer):
         source='ingredient.id', queryset=Ingredient.objects.all()
     )
     measurement_unit = serializers.CharField(
-        source='ingredient.measurement_unit', read_only=True
+        source='ingredient.measurement_unit',
     )
     name = serializers.CharField(
-        source='ingredient.name', read_only=True
+        source='ingredient.name',
     )
 
     class Meta:
@@ -266,7 +266,7 @@ class RecipeAddSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.add(**tags)
+        recipe.tags.add(tags)
         self.add_ingredients(recipe, ingredients)
         recipe.save()
         return recipe
@@ -276,7 +276,7 @@ class RecipeAddSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         super().update(instance, validated_data)
         instance.ingredients.clear()
-        instance.tags.add(**tags)
+        instance.tags.add(tags)
         self.add_ingredients(instance, ingredients)
         instance.save()
         return instance

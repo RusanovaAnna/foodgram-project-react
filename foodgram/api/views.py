@@ -45,10 +45,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Recipe.objects.all()
 
     def get_serializer_class(self):
-      #  if self.request.method == 'GET':
-      #      return RecipeSerializer
-      #  else:
-      #      return RecipeAddSerializer
         if self.action == 'favorite':
             return FavoriteRecipeSerializer
         elif self.action == 'shopping_cart':
