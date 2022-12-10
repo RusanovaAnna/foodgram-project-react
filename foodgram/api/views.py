@@ -45,22 +45,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Recipe.objects.all()
 
     def get_serializer_class(self):
+      #  if self.request.method == 'GET':
+      #      return RecipeSerializer
+      #  else:
+      #      return RecipeAddSerializer
         if self.action == 'favorite':
             return FavoriteRecipeSerializer
         elif self.action == 'shopping_cart':
             return ShopSerializer
+        elif self.request.method == 'POST':
+            return RecipeAddSerializer
         return self.serializer_class
 
-    @action(
-        detail=True,
-        serializer_class=RecipeAddSerializer,
-        permission_classes=[IsAuthenticated],
-        methods=['POST',]
-     #   url_name='recipes',
-    )
-    def perform_create(self, serializer):
-        user = self.request.user
-        serializer.save(author=user)
+   # @action(
+   #     detail=True,
+       # serializer_class=RecipeAddSerializer,
+    #    permission_classes=[IsAuthenticated],
+     #   methods=['POST',]
+    #)
+    #def perform_create(self, serializer):
+     #   user = self.request.user
+      #  serializer.save(author=user)
 
     def add_recipe(self, model, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
@@ -85,10 +90,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-    #    serializer_class=FavoriteRecipeSerializer,
         methods=['POST', 'DELETE', 'GET'],
         permission_classes=[IsAuthenticated],
         url_name='favorite',
+      #  serializer_class=FavoriteRecipeSerializer,
     )
     def favorite(self, request, pk=None):
         if request.method == 'POST':
@@ -98,11 +103,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-    #    serializer_class=ShopSerializer,
         methods=['POST', 'DELETE', 'GET'],
         permission_classes=[IsAuthenticated],
         url_path=r'(?P<pk>[\d]+)/shopping_cart',
         url_name='shopping_cart',
+      #  serializer_class=ShopSerializer
     )
     def shopping_cart(self, request, pk):
         if request.method == 'POST':

@@ -124,6 +124,7 @@ class ShopSerializer(FavoriteRecipeSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
+   # ingredients = IngredientSerializer(read_only=True, many=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = HybridImageField()
@@ -177,8 +178,8 @@ class RecipeAddSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     ingredients = IngredientListSerializer(many=True)
    # ingredients = IngredientRecipeGetSerializer(
-  #      source='amount',
-  #      many=True
+   #     source='amount',
+   #     many=True
    # )
     image = HybridImageField()
     cooking_time = serializers.IntegerField()
@@ -242,19 +243,30 @@ class RecipeAddSerializer(serializers.ModelSerializer):
                     'This tag doesnt exist yet('
                 )
     
-    def add_ingredients(self, recipe, ingredients):
-        for ingr in ingredients:
-            IngredientList.objects.create(
-                ingredient_id=ingr.get('id'),
-                amount=ingr.get('amount'),
-                recipe=recipe
+  #  def add_ingredients(self, recipe, ingredients):
+  #      for ingr in ingredients:
+  #          IngredientList.objects.create(
+  #              ingredient_id=ingr.get('id'),
+  #              amount=ingr.get('amount'),
+  #              recipe=recipe
+  #          )
+    
+    def add_ingredients(self, ingredients, recipe):
+        ingredient = []
+        for ingredient in ingredients:
+            ingredient.append(
+                recipe=recipe,
+                ingredient_id=self.ingredient.get('id'),
+                amount=self.ingredient.get('amount')
             )
+        IngredientList.objects.bulk_create(ingredient)
+        return ingredient
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
+        recipe.tags.add(**tags)
         self.add_ingredients(recipe, ingredients)
         recipe.save()
         return recipe
@@ -264,7 +276,7 @@ class RecipeAddSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         super().update(instance, validated_data)
         instance.ingredients.clear()
-        instance.tags.set(tags)
+        instance.tags.add(**tags)
         self.add_ingredients(instance, ingredients)
         instance.save()
         return instance
