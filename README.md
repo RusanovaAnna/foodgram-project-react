@@ -7,6 +7,8 @@ friend@gmail.com
 
 http://51.250.17.212
 
+http://foodgramlunatanna.ddns.net
+
 
 Дипломный проект foodgram-project-react
 
