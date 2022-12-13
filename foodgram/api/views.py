@@ -1,4 +1,5 @@
-from django.db.models import Sum
+#from django.db.models import Sum
+import datetime
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag #, IngredientList
+from recipes.models import FavoriteRecipe, Ingredient, Recipe, Shop, Tag, IngredientList
 from .filtres import IngredientSearchFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
@@ -106,23 +107,32 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         user = request.user
-        in_cart = Recipe.objects.filter(author=user)
-        queryset = in_cart.values_list(
-            'ingredients__name',
-            'ingredients__measurement_unit',
-        ).annotate(
-            amount_sum=Sum('amount__amount')
+        recipe_id = Shop.objects.filter(user=user).values('recipe')
+        recipes = Recipe.objects.filter(pk__in=recipe_id)
+        shop_recipe_dict = {}
+        n = 0
+        for recipe in recipes:
+            n += 1
+            ing_amounts = IngredientList.objects.filter(recipe=recipe)
+            for ing in ing_amounts:
+                if ing.ingredient.name in shop_recipe_dict:
+                    shop_recipe_dict[ing.ingredient.name][0] += ing.amount
+                else:
+                    shop_recipe_dict[ing.ingredient.name] = [
+                        ing.amount,
+                        ing.ingredient.measurement_unit
+                    ]
+        time = datetime.datetime.now()
+        time = time.strftime("%d-%m-%Y")
+        shop_text = (
+            f'FoodGram\nВыбрано рецептов на сайте: {n}\
+            \n-------------------\n{time}\
+            \nСписок покупок для Вас:\
+            \n-------------------'
         )
-        text = 'Список покупок для вас: \n'
-        for ingredient in queryset:
-            text += (
-                f"{list(ingredient)[0]} - "
-                f"{list(ingredient)[2]} "
-                f"{list(ingredient)[1]} \n"
-            )
-        response = HttpResponse(text, 'Content-Type: application/txt')
-        response['Content-Disposition'] = 'attachment; filename="yourwishlist"'
-        return response 
+        for key, value in shop_recipe_dict.items():
+            shop_text += f'\n{key} ({value[1]}) - {str(value[0])}'
+        return HttpResponse(shop_text, content_type='text/plain')
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
