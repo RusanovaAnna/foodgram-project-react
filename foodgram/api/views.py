@@ -27,7 +27,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.select_related(
         'author'
     ).prefetch_related('ingredients').all()
-   # queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrReadOnly]
     serializer_class = RecipeSerializer
     filter_backends = [DjangoFilterBackend]
@@ -49,19 +48,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return FavoriteRecipeSerializer
         elif self.action == 'shopping_cart':
             return ShopSerializer
-        elif self.request.method == 'POST':
+        elif self.request.method == 'POST' or self.request.method == 'PATCH':
             return RecipeAddSerializer
         return self.serializer_class
-
-   # @action(
-   #     detail=True,
-       # serializer_class=RecipeAddSerializer,
-    #    permission_classes=[IsAuthenticated],
-     #   methods=['POST',]
-    #)
-    #def perform_create(self, serializer):
-     #   user = self.request.user
-      #  serializer.save(author=user)
 
     def add_recipe(self, model, request, pk):
         recipe = get_object_or_404(Recipe, pk=pk)
@@ -89,7 +78,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=['POST', 'DELETE', 'GET'],
         permission_classes=[IsAuthenticated],
         url_name='favorite',
-      #  serializer_class=FavoriteRecipeSerializer,
     )
     def favorite(self, request, pk=None):
         if request.method == 'POST':
@@ -103,7 +91,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated],
         url_path=r'(?P<pk>[\d]+)/shopping_cart',
         url_name='shopping_cart',
-      #  serializer_class=ShopSerializer
     )
     def shopping_cart(self, request, pk):
         if request.method == 'POST':
@@ -141,9 +128,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     permission_classes = (AllowAny,)
-    #filterset_class = IngredientFilter
     serializer_class = IngredientSerializer
     pagination_class = None
-   # filter_backends = (filters.SearchFilter,)
     filter_backends = [IngredientSearchFilter]
     search_fields = ('^name',)

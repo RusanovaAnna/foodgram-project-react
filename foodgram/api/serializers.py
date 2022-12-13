@@ -1,5 +1,3 @@
-#from django.db import transaction
-#from django.db.models import F
 from drf_extra_fields.fields import HybridImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
@@ -51,7 +49,6 @@ class IngredientListSerializer(serializers.ModelSerializer):
 
 
 class IngredientRecipeGetSerializer(serializers.ModelSerializer):
-   # id = serializers.IntegerField(source='ingredient.id')
     id = serializers.IntegerField()
     amount = serializers.IntegerField()
 

@@ -201,9 +201,6 @@ class IngredientList(models.Model):
         verbose_name = 'Ingredient amount'
         verbose_name_plural = 'Ingredient amounts'
 
-   # def __str__(self):
-    #    return f'{self.recipe.name} - {self.ingredient.name}'
-
 
 class Shop(models.Model):
     user = models.ForeignKey(
