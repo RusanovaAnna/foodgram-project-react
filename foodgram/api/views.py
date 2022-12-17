@@ -118,7 +118,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         time = timezone.now() 
         time = time.strftime("%d-%m-%Y")
-        text = 'Список покупок для вас: \n'
+        text = 'Список покупок для вас: \n\n'
         for ingredient in ingredients:
             text += (
                 f"{list(ingredient)[0]} - "
