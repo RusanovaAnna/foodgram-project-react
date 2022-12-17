@@ -51,13 +51,6 @@ class RecipeAdmin(ModelAdmin):
     ordering = ('author')
     inlines = [IngredientInRecipeAdmin, TagInRecipeAdmin]
 
-    @display(description='tags')
-    def get_tags(self, obj):
-        get_tags = obj.list_tags()
-        if get_tags:
-            return list(get_tags)
-        return None
-
     @display(description='added to favorites')
     def favorite(self, obj):
         return obj.favorite_recipe.count()

@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from users.models import Subscription, User
-from .serializers import (SetPasswordSerializer,
-                          SubscriptionSerializer, UserSerializer)
+from .serializers import (SetPasswordSerializer, SubscriptionSerializer,
+                          UserSerializer)
 
 
 class UserViewSet(viewsets.GenericViewSet):

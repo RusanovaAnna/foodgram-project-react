@@ -204,7 +204,7 @@ class RecipeAddSerializer(serializers.ModelSerializer):
             )
         return data
 
-    def tag_validate(self, tags):
+    def validate_tag(self, tags):
         if not tags:
             raise serializers.ValidationError(
                 'Tag must be added)'
