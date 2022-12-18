@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from recipes.models import (FavoriteRecipe, Ingredient, IngredientList, Recipe,
+from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             Shop, Tag)
 from .filtres import IngredientSearchFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
